@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useTheme } from "../hooks/useTheme";
 
 interface Star {
   x: number;
@@ -19,11 +18,34 @@ interface Star {
 
 export const StarBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { theme } = useTheme();
+  const [isDarkMode, setIsDarkMode] = useState(
+    document.documentElement.classList.contains("dark")
+  );
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const starsRef = useRef<Star[]>([]);
   const animationFrameRef = useRef<number>();
   const timeRef = useRef<number>(0);
+
+  // Watch for theme changes
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (
+          mutation.target === document.documentElement &&
+          mutation.attributeName === "class"
+        ) {
+          setIsDarkMode(document.documentElement.classList.contains("dark"));
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -48,8 +70,8 @@ export const StarBackground: React.FC = () => {
         stars.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          size: Math.random() * 2 + 1.5, // Slightly larger base size
-          opacity: Math.random() * 0.3 + 0.5, // Higher base opacity
+          size: Math.random() * 2 + 1.5,
+          opacity: Math.random() * 0.3 + 0.5,
           speed: Math.random() * 0.3 + 0.1,
           angle: Math.random() * Math.PI * 2,
           originalX: 0,
@@ -58,7 +80,7 @@ export const StarBackground: React.FC = () => {
           twinklePhase: Math.random() * Math.PI * 2,
           velocityX: 0,
           velocityY: 0,
-          hue: Math.random() * 40 + 230, // Slightly narrower range for more consistent colors
+          hue: Math.random() * 40 + 230,
         });
       }
 
@@ -70,33 +92,27 @@ export const StarBackground: React.FC = () => {
     };
 
     const updateStar = (star: Star, deltaTime: number) => {
-      // Apply velocity with damping
       star.velocityX *= 0.95;
       star.velocityY *= 0.95;
       star.x += star.velocityX;
       star.y += star.velocityY;
 
-      // Random movement
       star.angle += (Math.random() - 0.5) * 0.1;
       star.x += Math.cos(star.angle) * star.speed;
       star.y += Math.sin(star.angle) * star.speed;
 
-      // Keep stars within bounds with wrapping
       if (star.x < 0) star.x = canvas.width;
       if (star.x > canvas.width) star.x = 0;
       if (star.y < 0) star.y = canvas.height;
       if (star.y > canvas.height) star.y = 0;
 
-      // Update original position for mouse interaction reference
       star.originalX = star.x;
       star.originalY = star.y;
 
-      // Twinkle effect
       star.twinklePhase += star.twinkleSpeed * deltaTime;
       const twinkle = Math.sin(star.twinklePhase) * 0.3 + 0.7;
 
-      // Update hue for color cycling in light mode
-      if (theme === "light") {
+      if (!isDarkMode) {
         star.hue = ((star.hue + 0.1) % 60) + 220;
       }
 
@@ -118,7 +134,6 @@ export const StarBackground: React.FC = () => {
       stars.forEach((star) => {
         const twinkle = updateStar(star, deltaTime);
 
-        // Mouse interaction
         const dx = mouseX - star.x;
         const dy = mouseY - star.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
@@ -138,23 +153,18 @@ export const StarBackground: React.FC = () => {
           star.y -= Math.sin(angle) * force * 0.5;
         }
 
-        // Draw star with enhanced glow and theme-appropriate colors
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size * (1 + influence), 0, Math.PI * 2);
 
-        let color;
         const finalOpacity = star.opacity * twinkle * (1 + influence * 2);
 
-        if (theme === "dark") {
-          color = "255, 255, 255";
-          ctx.fillStyle = `rgba(${color}, ${finalOpacity})`;
+        if (isDarkMode) {
+          ctx.fillStyle = `rgba(255, 255, 255, ${finalOpacity})`;
         } else {
-          // Medium grey colors for better visibility in both modes
-          ctx.fillStyle = `rgba(130, 130, 130, ${finalOpacity * 1.5})`; // Medium grey with increased opacity
+          ctx.fillStyle = `rgba(130, 130, 130, ${finalOpacity * 1.5})`;
         }
         ctx.fill();
 
-        // Enhanced glow effect
         if (influence > 0) {
           ctx.beginPath();
           ctx.arc(
@@ -164,10 +174,10 @@ export const StarBackground: React.FC = () => {
             0,
             Math.PI * 2
           );
-          if (theme === "dark") {
+          if (isDarkMode) {
             ctx.fillStyle = `rgba(255, 255, 255, ${finalOpacity * 0.3})`;
           } else {
-            ctx.fillStyle = `rgba(130, 130, 130, ${finalOpacity * 0.6})`; // Medium grey glow with higher opacity
+            ctx.fillStyle = `rgba(130, 130, 130, ${finalOpacity * 0.6})`;
           }
           ctx.fill();
         }
@@ -192,7 +202,7 @@ export const StarBackground: React.FC = () => {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [theme]);
+  }, [isDarkMode]);
 
   return (
     <canvas

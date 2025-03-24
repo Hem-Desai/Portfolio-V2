@@ -1,16 +1,20 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Music2, ExternalLink, Pause, Play } from "lucide-react";
+import { Music2, ExternalLink, Pause, Play, RefreshCw } from "lucide-react";
 import {
   getCurrentTrack,
   getTrackFeatures,
   type SpotifyTrack,
 } from "../lib/spotify";
 
+const UPDATE_INTERVAL = 30000; // 30 seconds
+
 export const SpotifyWidget: React.FC = () => {
   const [track, setTrack] = useState<SpotifyTrack | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
 
@@ -29,26 +33,32 @@ export const SpotifyWidget: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    const fetchTrack = async () => {
-      try {
+  const fetchTrack = async (isManualRefresh = false) => {
+    try {
+      if (isManualRefresh) {
+        setIsRefreshing(true);
+      } else {
         setIsLoading(true);
-        const data = await getCurrentTrack();
-        setTrack(data);
-        setError(null);
-      } catch (err) {
-        setError("Failed to load track data");
-        console.error(err);
-      } finally {
-        setIsLoading(false);
       }
-    };
+      const data = await getCurrentTrack();
+      setTrack(data);
+      setError(null);
+      setLastUpdated(new Date());
+    } catch (err) {
+      setError("Failed to load track data");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
 
+  useEffect(() => {
     // Initial fetch
     fetchTrack();
 
-    // Poll for updates every 30 seconds
-    const interval = setInterval(fetchTrack, 30000);
+    // Poll for updates
+    const interval = setInterval(() => fetchTrack(), UPDATE_INTERVAL);
     return () => clearInterval(interval);
   }, []);
 
@@ -161,6 +171,18 @@ export const SpotifyWidget: React.FC = () => {
     return null;
   }
 
+  const formatLastUpdated = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const seconds = Math.floor(diff / 1000);
+
+    if (seconds < 60) return "Just now";
+    if (seconds < 120) return "1 minute ago";
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
+    if (seconds < 7200) return "1 hour ago";
+    return `${Math.floor(seconds / 3600)} hours ago`;
+  };
+
   return (
     <div
       className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 rounded-lg overflow-hidden bg-white/10 backdrop-blur-sm 
@@ -175,6 +197,25 @@ export const SpotifyWidget: React.FC = () => {
 
       {/* Content */}
       <div className="relative p-2">
+        <div className="flex items-center justify-between mb-1">
+          <button
+            onClick={() => fetchTrack(true)}
+            disabled={isRefreshing}
+            className="text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white 
+              transition-colors p-1 rounded-full hover:bg-white/10 disabled:opacity-50"
+            title="Refresh now"
+          >
+            <RefreshCw
+              className={`w-3 h-3 ${isRefreshing ? "animate-spin" : ""}`}
+            />
+          </button>
+          {lastUpdated && (
+            <span className="text-[8px] text-black/40 dark:text-white/40">
+              Updated {formatLastUpdated(lastUpdated)}
+            </span>
+          )}
+        </div>
+
         {isLoading ? (
           <div className="flex items-center gap-2 text-black dark:text-white text-xs">
             <Music2 className="w-3 h-3 animate-pulse" />

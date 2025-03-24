@@ -9,6 +9,10 @@ interface SoundOption {
   icon: React.ReactNode;
 }
 
+interface AmbientPlayerProps {
+  onAllSoundsPlayed?: () => void;
+}
+
 const SOUND_OPTIONS: SoundOption[] = [
   {
     id: "piano",
@@ -30,13 +34,16 @@ const SOUND_OPTIONS: SoundOption[] = [
   },
 ];
 
-export const AmbientPlayer: React.FC = () => {
+export const AmbientPlayer: React.FC<AmbientPlayerProps> = ({
+  onAllSoundsPlayed,
+}) => {
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.15);
   const [currentSound, setCurrentSound] = useState<SoundOption>(
     SOUND_OPTIONS[0]
   );
   const [showControls, setShowControls] = useState(false);
+  const [playedSounds, setPlayedSounds] = useState<Set<string>>(new Set());
 
   const [play, { sound, stop }] = useSound(currentSound.url, {
     volume: volume,
@@ -72,6 +79,14 @@ export const AmbientPlayer: React.FC = () => {
     setCurrentSound(sound);
     if (!isMuted) {
       play();
+    }
+
+    // Track played sounds and check for achievement
+    const newPlayedSounds = new Set(playedSounds).add(sound.id);
+    setPlayedSounds(newPlayedSounds);
+
+    if (newPlayedSounds.size === SOUND_OPTIONS.length) {
+      onAllSoundsPlayed?.();
     }
   };
 

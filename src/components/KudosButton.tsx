@@ -4,11 +4,20 @@ import { getReactions, addReaction, type Reaction } from "../lib/supabase";
 
 const EMOJI_OPTIONS = ["❤️", "👍", "🎉", "🚀", "🔥", "👏", "🌟", "💡"];
 
-export const KudosButton: React.FC = () => {
+interface KudosButtonProps {
+  onFirstKudos?: () => void;
+  onAllKudos?: () => void;
+}
+
+export const KudosButton: React.FC<KudosButtonProps> = ({
+  onFirstKudos,
+  onAllKudos,
+}) => {
   const [showPicker, setShowPicker] = useState(false);
   const [reactions, setReactions] = useState<Reaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
+  const [usedEmojis, setUsedEmojis] = useState<Set<string>>(new Set());
   const [flyingEmoji, setFlyingEmoji] = useState<
     { emoji: string; id: number }[]
   >([]);
@@ -43,6 +52,18 @@ export const KudosButton: React.FC = () => {
     try {
       await addReaction(emoji);
       await loadReactions();
+
+      // Track used emojis
+      const newUsedEmojis = new Set(usedEmojis).add(emoji);
+      setUsedEmojis(newUsedEmojis);
+
+      // Check achievements
+      if (newUsedEmojis.size === 1) {
+        onFirstKudos?.();
+      }
+      if (newUsedEmojis.size === EMOJI_OPTIONS.length) {
+        onAllKudos?.();
+      }
 
       setTimeout(() => {
         setSelectedEmoji(null);

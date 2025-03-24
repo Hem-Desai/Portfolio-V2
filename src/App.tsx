@@ -3,13 +3,13 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Github, Mail, Download, Trophy, Music, Paperclip } from "lucide-react";
 import { AmbientPlayer } from "./components/AmbientPlayer";
 import { SkillTree } from "./components/SkillTree";
-import { DestroyButton } from "./components/DestroyButton";
 import { KudosButton } from "./components/KudosButton";
 import { SpotifyWidget } from "./components/SpotifyWidget";
 import { SpotifyAuth } from "./components/SpotifyAuth";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { ProjectCarousel } from "./components/ProjectCarousel";
 import { StarBackground } from "./components/StarBackground";
+import { Confetti } from "./components/Confetti";
 
 // Achievement definitions
 const ACHIEVEMENTS = {
@@ -32,11 +32,6 @@ const ACHIEVEMENTS = {
     id: "resume",
     title: "Paper Trail",
     description: "Downloaded my resume",
-  },
-  DESTROY_WEBSITE: {
-    id: "destroy_website",
-    title: "Chaos Agent",
-    description: "Unleashed destruction upon the website",
   },
   SPOTIFY_CONNECT: {
     id: "spotify_connect",
@@ -124,46 +119,93 @@ const PROJECTS = [
 function MainContent() {
   const [mounted, setMounted] = useState(false);
   const [achievements, setAchievements] = useState<Set<string>>(new Set());
-  const [showNotification, setShowNotification] = useState(false);
-  const [currentAchievement, setCurrentAchievement] = useState<{
-    title: string;
-    description: string;
-  } | null>(null);
-  const [socialClicks, setSocialClicks] = useState<Set<string>>(new Set());
-  const [showAchievements, setShowAchievements] = useState(false);
-  const [ribbons, setRibbons] = useState<
-    { id: number; color: string; left: string }[]
-  >([]);
   const [showAchievementsPanel, setShowAchievementsPanel] = useState(false);
   const [socialsVisible, setSocialsVisible] = useState(false);
+  const [socialClicks, setSocialClicks] = useState<Set<string>>(new Set());
+  const [confettiTrigger, setConfettiTrigger] = useState(false);
+  const [readStartTime, setReadStartTime] = useState<number | null>(null);
+  const [visitedSections, setVisitedSections] = useState<Set<string>>(
+    new Set()
+  );
 
   useEffect(() => {
     setMounted(true);
-    // Load achievements from localStorage
-    const savedAchievements = localStorage.getItem("achievements");
-    if (savedAchievements) {
-      setAchievements(new Set(JSON.parse(savedAchievements)));
-      setShowAchievements(true);
+    localStorage.removeItem("achievements");
+    setAchievements(new Set());
+
+    // Check for night owl achievement
+    const currentHour = new Date().getHours();
+    if (currentHour >= 0 && currentHour < 5) {
+      unlockAchievement(ACHIEVEMENTS.NIGHT_OWL);
     }
+
+    // Start tracking reading time
+    setReadStartTime(Date.now());
+
+    const handleAchievement = (e: CustomEvent) => {
+      unlockAchievement(e.detail);
+    };
+
+    const handleScroll = () => {
+      // Check for scroll to bottom achievement
+      if (
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 100
+      ) {
+        unlockAchievement(ACHIEVEMENTS.SCROLL_BOTTOM);
+      }
+    };
+
+    window.addEventListener(
+      "unlockAchievement",
+      handleAchievement as EventListener
+    );
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener(
+        "unlockAchievement",
+        handleAchievement as EventListener
+      );
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
-  const createRibbons = () => {
-    const colors = [
-      "#FF0000",
-      "#00FF00",
-      "#0000FF",
-      "#FFFF00",
-      "#FF00FF",
-      "#00FFFF",
-    ];
-    const newRibbons = Array.from({ length: 20 }, (_, i) => ({
-      id: Date.now() + i,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      left: `${Math.random() * 100}%`,
-    }));
-    setRibbons(newRibbons);
-    setTimeout(() => setRibbons([]), 1500);
-  };
+  // Track section visits for quick reader achievement
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const sectionId = entry.target.id;
+            setVisitedSections((prev) => {
+              const newSections = new Set(prev).add(sectionId);
+
+              // Check if all sections have been visited within 30 seconds
+              if (newSections.size === 5 && readStartTime) {
+                // 5 main sections
+                const timeSpent = Date.now() - readStartTime;
+                if (timeSpent < 30000) {
+                  // 30 seconds
+                  unlockAchievement(ACHIEVEMENTS.QUICK_READER);
+                }
+              }
+
+              return newSections;
+            });
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    // Observe main sections
+    document.querySelectorAll("section").forEach((section) => {
+      observer.observe(section);
+    });
+
+    return () => observer.disconnect();
+  }, [readStartTime]);
 
   const unlockAchievement = (
     achievement: (typeof ACHIEVEMENTS)[keyof typeof ACHIEVEMENTS]
@@ -171,19 +213,7 @@ function MainContent() {
     if (!achievements.has(achievement.id)) {
       const newAchievements = new Set(achievements).add(achievement.id);
       setAchievements(newAchievements);
-      localStorage.setItem(
-        "achievements",
-        JSON.stringify([...newAchievements])
-      );
-
-      if (!showAchievements) {
-        setShowAchievements(true);
-        createRibbons();
-      }
-
-      setCurrentAchievement(achievement);
-      setShowNotification(true);
-      setTimeout(() => setShowNotification(false), 3000);
+      setConfettiTrigger((prev) => !prev);
     }
   };
 
@@ -191,7 +221,8 @@ function MainContent() {
     const newSocialClicks = new Set(socialClicks).add(platform);
     setSocialClicks(newSocialClicks);
 
-    if (newSocialClicks.size === 2) {
+    if (newSocialClicks.size === 3) {
+      // Changed to 3 to include all social links
       unlockAchievement(ACHIEVEMENTS.ALL_SOCIALS);
     }
   };
@@ -204,72 +235,105 @@ function MainContent() {
     unlockAchievement(ACHIEVEMENTS.RESUME);
   };
 
+  // Add handlers for other achievements
+  const handleThemeToggle = () => {
+    unlockAchievement(ACHIEVEMENTS.THEME_TOGGLE);
+  };
+
+  const handleSpotifyConnect = () => {
+    unlockAchievement(ACHIEVEMENTS.SPOTIFY_CONNECT);
+  };
+
+  const handleKudosFirst = () => {
+    unlockAchievement(ACHIEVEMENTS.KUDOS_FIRST);
+  };
+
+  const handleKudosAll = () => {
+    unlockAchievement(ACHIEVEMENTS.KUDOS_ALL);
+  };
+
+  const handleAmbientSoundComplete = () => {
+    unlockAchievement(ACHIEVEMENTS.AMBIENT_SOUNDS);
+  };
+
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-900 text-black dark:text-white">
       <StarBackground />
-      {/* Celebration Ribbons */}
-      {ribbons.map((ribbon) => (
-        <div
-          key={ribbon.id}
-          className="ribbon"
-          style={{
-            backgroundColor: ribbon.color,
-            left: ribbon.left,
-            top: "50%",
-          }}
-        />
-      ))}
+      <Confetti trigger={confettiTrigger} />
 
-      {/* Achievement Notification */}
-      <div
-        className={`fixed top-6 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-6 py-3 rounded-full flex items-center gap-2 transition-transform duration-300 ${
-          showNotification
-            ? "opacity-100 transform translate-y-0"
-            : "opacity-0 transform -translate-y-full"
-        }`}
+      {/* Achievements Counter */}
+      <button
+        onClick={() => setShowAchievementsPanel(!showAchievementsPanel)}
+        className="fixed bottom-4 left-4 flex items-center gap-2 px-3 py-2 
+        bg-white/10 dark:bg-zinc-800/90 backdrop-blur-sm
+        rounded-lg shadow-lg border border-white/20 dark:border-zinc-700/50
+        text-black dark:text-white hover:bg-white/20 dark:hover:bg-zinc-700/90
+        transition-all duration-300"
       >
-        <Trophy size={20} />
-        <div>
-          <p className="font-medium">{currentAchievement?.title}</p>
-          <p className="text-sm opacity-90">
-            {currentAchievement?.description}
-          </p>
-        </div>
-      </div>
+        <Trophy className="w-4 h-4 text-emerald-500" />
+        <span className="font-medium text-emerald-500">
+          {achievements.size}
+        </span>
+        <span className="text-black/60 dark:text-white/60">
+          / {Object.keys(ACHIEVEMENTS).length}
+        </span>
+      </button>
 
-      {/* Achievements Panel - Now toggleable */}
-      {showAchievements && (
+      {/* Achievements List Panel */}
+      {showAchievementsPanel && (
         <div
-          className={`fixed bottom-6 left-6 bg-zinc-100 dark:bg-zinc-800 p-4 rounded-lg shadow-lg 
-            transition-all duration-300 ${
-              showAchievementsPanel
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-full pointer-events-none"
-            }`}
+          className="fixed bottom-16 left-4 w-72 bg-white/10 dark:bg-zinc-800/90 backdrop-blur-sm p-4 
+          rounded-lg shadow-lg border border-white/20 dark:border-zinc-700/50
+          transition-all duration-300 transform"
         >
-          <button
-            onClick={() => setShowAchievementsPanel(!showAchievementsPanel)}
-            className="absolute -top-10 left-0 flex items-center gap-2 text-sm text-black dark:text-white 
-              bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-t-lg"
-          >
-            <Trophy size={16} />
-            {achievements.size}/{Object.keys(ACHIEVEMENTS).length}
-          </button>
-          <h3 className="text-sm font-medium mb-2 flex items-center gap-2 text-black dark:text-white">
-            <Trophy size={16} />
-            Achievements
-          </h3>
-          <div className="space-y-2">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-medium text-black dark:text-white">
+              Achievements
+            </h3>
+            <button
+              onClick={() => setShowAchievementsPanel(false)}
+              className="p-1 hover:bg-white/10 dark:hover:bg-zinc-700/50 rounded-full
+              transition-all duration-300"
+            >
+              ×
+            </button>
+          </div>
+          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
             {Object.values(ACHIEVEMENTS).map((achievement) => (
               <div
                 key={achievement.id}
-                className={`text-xs ${
+                className={`flex items-start gap-3 p-2 rounded-lg transition-all duration-300
+                ${
                   achievements.has(achievement.id)
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-zinc-400 dark:text-zinc-500"
+                    ? "bg-emerald-500/10 dark:bg-emerald-500/20"
+                    : "bg-white/5 dark:bg-zinc-700/30"
                 }`}
               >
-                {achievement.title}
+                <div
+                  className={`p-1.5 rounded-full flex-shrink-0
+                  ${
+                    achievements.has(achievement.id)
+                      ? "bg-emerald-500/20 text-emerald-500"
+                      : "bg-zinc-200/20 dark:bg-zinc-700/50 text-zinc-400 dark:text-zinc-500"
+                  }`}
+                >
+                  <Trophy className="w-3 h-3" />
+                </div>
+                <div>
+                  <p
+                    className={`text-sm font-medium
+                    ${
+                      achievements.has(achievement.id)
+                        ? "text-emerald-500 dark:text-emerald-400"
+                        : "text-zinc-400 dark:text-zinc-500"
+                    }`}
+                  >
+                    {achievement.title}
+                  </p>
+                  <p className="text-xs text-black/60 dark:text-white/60">
+                    {achievement.description}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
@@ -427,12 +491,13 @@ function MainContent() {
         </section>
       </main>
       <div className="relative min-h-screen">
-        <ThemeToggle />
+        <ThemeToggle onThemeToggle={handleThemeToggle} />
         {localStorage.getItem("spotifyRefreshToken") ? (
           <SpotifyWidget />
         ) : (
           <a
             href={SPOTIFY_AUTH_URL}
+            onClick={handleSpotifyConnect}
             className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 
               bg-white/10 backdrop-blur-sm rounded-lg border border-zinc-200/20 dark:border-zinc-700/20 
               text-black dark:text-white hover:bg-white/20 transition-all duration-300"
@@ -441,9 +506,11 @@ function MainContent() {
             Connect Spotify
           </a>
         )}
-        <KudosButton />
-        <DestroyButton />
-        <AmbientPlayer />
+        <KudosButton
+          onFirstKudos={handleKudosFirst}
+          onAllKudos={handleKudosAll}
+        />
+        <AmbientPlayer onAllSoundsPlayed={handleAmbientSoundComplete} />
       </div>
     </div>
   );
@@ -453,8 +520,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/callback" element={<SpotifyAuth />} />
         <Route path="/" element={<MainContent />} />
+        <Route path="/callback" element={<SpotifyAuth />} />
       </Routes>
     </Router>
   );

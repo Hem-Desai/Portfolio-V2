@@ -276,6 +276,9 @@ export const SkillTree: React.FC = () => {
   const [hoveredConnections, setHoveredConnections] = useState<string[]>([]);
   const [skills, setSkills] = useState<Skill[]>(SKILLS);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [isDarkMode, setIsDarkMode] = useState(
+    document.documentElement.classList.contains("dark")
+  );
 
   // Update dimensions on resize
   useEffect(() => {
@@ -293,6 +296,27 @@ export const SkillTree: React.FC = () => {
     updateDimensions();
 
     return () => resizeObserver.disconnect();
+  }, []);
+
+  // Watch for theme changes
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (
+          mutation.target === document.documentElement &&
+          mutation.attributeName === "class"
+        ) {
+          setIsDarkMode(document.documentElement.classList.contains("dark"));
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
   }, []);
 
   // Calculate positions for skills
@@ -479,15 +503,14 @@ export const SkillTree: React.FC = () => {
         );
 
         // Use theme-appropriate colors for connections
-        const isDark = document.documentElement.classList.contains("dark");
-        const baseColor = isDark ? "150, 150, 150" : "100, 100, 100";
-        const hoverColor = isDark ? "200, 200, 200" : "75, 75, 75";
+        const baseColor = isDarkMode ? "150, 150, 150" : "100, 100, 100";
+        const hoverColor = isDarkMode ? "200, 200, 200" : "75, 75, 75";
 
         if (hoveredSkill === skill.id || hoveredSkill === connectedId) {
           ctx.strokeStyle = `rgba(${hoverColor}, 0.4)`;
           ctx.lineWidth = 2;
           // Add glow effect to the connection
-          ctx.shadowColor = isDark
+          ctx.shadowColor = isDarkMode
             ? "rgba(255, 255, 255, 0.2)"
             : "rgba(99, 102, 241, 0.2)"; // Indigo color for light mode
           ctx.shadowBlur = 8;
@@ -501,7 +524,7 @@ export const SkillTree: React.FC = () => {
         ctx.stroke();
       });
     });
-  }, [skills, hoveredSkill]);
+  }, [skills, hoveredSkill, isDarkMode]);
 
   return (
     <div className="w-full">
