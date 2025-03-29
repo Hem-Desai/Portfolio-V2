@@ -36,7 +36,7 @@ const ACHIEVEMENTS = {
   SPOTIFY_CONNECT: {
     id: "spotify_connect",
     title: "Music Enthusiast",
-    description: "Connected your Spotify account",
+    description: "Checked out what I'm listening to",
   },
   KUDOS_FIRST: {
     id: "kudos_first",
@@ -48,25 +48,20 @@ const ACHIEVEMENTS = {
     title: "Emoji Master",
     description: "Used all kudos reactions",
   },
-  SCROLL_BOTTOM: {
-    id: "scroll_bottom",
-    title: "Deep Diver",
-    description: "Scrolled all the way to the bottom",
-  },
   AMBIENT_SOUNDS: {
     id: "ambient_sounds",
     title: "Sound Explorer",
     description: "Tried all ambient sound options",
   },
-  QUICK_READER: {
-    id: "quick_reader",
-    title: "Speed Reader",
-    description: "Read through all sections in under 30 seconds",
-  },
   NIGHT_OWL: {
     id: "night_owl",
     title: "Night Owl",
     description: "Visited between 12 AM and 5 AM",
+  },
+  SKILL_EXPLORER: {
+    id: "skill_explorer",
+    title: "Tech Curious",
+    description: "Explored the skill tree",
   },
 };
 
@@ -139,73 +134,22 @@ function MainContent() {
       unlockAchievement(ACHIEVEMENTS.NIGHT_OWL);
     }
 
-    // Start tracking reading time
-    setReadStartTime(Date.now());
-
     const handleAchievement = (e: CustomEvent) => {
       unlockAchievement(e.detail);
-    };
-
-    const handleScroll = () => {
-      // Check for scroll to bottom achievement
-      if (
-        window.innerHeight + window.scrollY >=
-        document.documentElement.scrollHeight - 100
-      ) {
-        unlockAchievement(ACHIEVEMENTS.SCROLL_BOTTOM);
-      }
     };
 
     window.addEventListener(
       "unlockAchievement",
       handleAchievement as EventListener
     );
-    window.addEventListener("scroll", handleScroll);
 
     return () => {
       window.removeEventListener(
         "unlockAchievement",
         handleAchievement as EventListener
       );
-      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
-
-  // Track section visits for quick reader achievement
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const sectionId = entry.target.id;
-            setVisitedSections((prev) => {
-              const newSections = new Set(prev).add(sectionId);
-
-              // Check if all sections have been visited within 30 seconds
-              if (newSections.size === 5 && readStartTime) {
-                // 5 main sections
-                const timeSpent = Date.now() - readStartTime;
-                if (timeSpent < 30000) {
-                  // 30 seconds
-                  unlockAchievement(ACHIEVEMENTS.QUICK_READER);
-                }
-              }
-
-              return newSections;
-            });
-          }
-        });
-      },
-      { threshold: 0.5 }
-    );
-
-    // Observe main sections
-    document.querySelectorAll("section").forEach((section) => {
-      observer.observe(section);
-    });
-
-    return () => observer.disconnect();
-  }, [readStartTime]);
 
   const unlockAchievement = (
     achievement: (typeof ACHIEVEMENTS)[keyof typeof ACHIEVEMENTS]
@@ -240,20 +184,12 @@ function MainContent() {
     unlockAchievement(ACHIEVEMENTS.THEME_TOGGLE);
   };
 
-  const handleSpotifyConnect = () => {
-    unlockAchievement(ACHIEVEMENTS.SPOTIFY_CONNECT);
-  };
-
-  const handleKudosFirst = () => {
-    unlockAchievement(ACHIEVEMENTS.KUDOS_FIRST);
-  };
-
-  const handleKudosAll = () => {
-    unlockAchievement(ACHIEVEMENTS.KUDOS_ALL);
-  };
-
   const handleAmbientSoundComplete = () => {
     unlockAchievement(ACHIEVEMENTS.AMBIENT_SOUNDS);
+  };
+
+  const handleSkillInteraction = () => {
+    unlockAchievement(ACHIEVEMENTS.SKILL_EXPLORER);
   };
 
   return (
@@ -474,7 +410,7 @@ function MainContent() {
           <h2 className="text-2xl font-medium text-black dark:text-white mb-8">
             Skills
           </h2>
-          <SkillTree />
+          <SkillTree onInteraction={handleSkillInteraction} />
         </section>
 
         {/* About */}
@@ -493,11 +429,12 @@ function MainContent() {
       <div className="relative min-h-screen">
         <ThemeToggle onThemeToggle={handleThemeToggle} />
         {localStorage.getItem("spotifyRefreshToken") ? (
-          <SpotifyWidget />
+          <SpotifyWidget
+            onTrackClick={() => unlockAchievement(ACHIEVEMENTS.SPOTIFY_CONNECT)}
+          />
         ) : (
           <a
             href={SPOTIFY_AUTH_URL}
-            onClick={handleSpotifyConnect}
             className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 
               bg-white/10 backdrop-blur-sm rounded-lg border border-zinc-200/20 dark:border-zinc-700/20 
               text-black dark:text-white hover:bg-white/20 transition-all duration-300"
@@ -507,8 +444,8 @@ function MainContent() {
           </a>
         )}
         <KudosButton
-          onFirstKudos={handleKudosFirst}
-          onAllKudos={handleKudosAll}
+          onFirstKudos={() => unlockAchievement(ACHIEVEMENTS.KUDOS_FIRST)}
+          onAllKudos={() => unlockAchievement(ACHIEVEMENTS.KUDOS_ALL)}
         />
         <AmbientPlayer onAllSoundsPlayed={handleAmbientSoundComplete} />
       </div>

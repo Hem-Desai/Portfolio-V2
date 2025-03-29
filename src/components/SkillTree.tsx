@@ -269,7 +269,11 @@ const SKILLS: Skill[] = [
   },
 ];
 
-export const SkillTree: React.FC = () => {
+interface SkillTreeProps {
+  onInteraction?: () => void;
+}
+
+export const SkillTree: React.FC<SkillTreeProps> = ({ onInteraction }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
@@ -279,6 +283,7 @@ export const SkillTree: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(
     document.documentElement.classList.contains("dark")
   );
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   // Update dimensions on resize
   useEffect(() => {
@@ -526,6 +531,25 @@ export const SkillTree: React.FC = () => {
     });
   }, [skills, hoveredSkill, isDarkMode]);
 
+  const handleSkillHover = (skillId: string) => {
+    setHoveredSkill(skillId);
+    // Get both outgoing and incoming connections
+    const skill = skills.find((s) => s.id === skillId);
+    if (skill) {
+      const outgoingConnections = skill.connections;
+      const incomingConnections = skills
+        .filter((s) => s.connections.includes(skillId))
+        .map((s) => s.id);
+      setHoveredConnections([...outgoingConnections, ...incomingConnections]);
+    }
+
+    // Trigger the achievement only once
+    if (!hasInteracted) {
+      setHasInteracted(true);
+      onInteraction?.();
+    }
+  };
+
   return (
     <div className="w-full">
       <div className="grid grid-cols-3 gap-4 text-sm text-black dark:text-white mb-6">
@@ -577,18 +601,7 @@ export const SkillTree: React.FC = () => {
                   border border-zinc-200/20 dark:border-zinc-700/20
                   transition-all duration-300
                 `}
-                onMouseEnter={() => {
-                  setHoveredSkill(skill.id);
-                  // Get both outgoing and incoming connections
-                  const outgoingConnections = skill.connections;
-                  const incomingConnections = skills
-                    .filter((s) => s.connections.includes(skill.id))
-                    .map((s) => s.id);
-                  setHoveredConnections([
-                    ...outgoingConnections,
-                    ...incomingConnections,
-                  ]);
-                }}
+                onMouseEnter={() => handleSkillHover(skill.id)}
                 onMouseLeave={() => {
                   setHoveredSkill(null);
                   setHoveredConnections([]);

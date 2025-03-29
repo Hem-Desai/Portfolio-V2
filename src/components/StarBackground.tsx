@@ -5,15 +5,13 @@ interface Star {
   y: number;
   size: number;
   opacity: number;
-  speed: number;
-  angle: number;
   originalX: number;
   originalY: number;
-  twinkleSpeed: number;
-  twinklePhase: number;
   velocityX: number;
   velocityY: number;
   hue: number;
+  angle: number;
+  speed: number;
 }
 
 export const StarBackground: React.FC = () => {
@@ -22,6 +20,7 @@ export const StarBackground: React.FC = () => {
     document.documentElement.classList.contains("dark")
   );
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const lastMousePosition = useRef({ x: 0, y: 0 });
   const starsRef = useRef<Star[]>([]);
   const animationFrameRef = useRef<number>();
   const timeRef = useRef<number>(0);
@@ -63,24 +62,22 @@ export const StarBackground: React.FC = () => {
     const initStars = () => {
       const stars: Star[] = [];
       const numStars = Math.floor(
-        (window.innerWidth * window.innerHeight) / 8000
+        (window.innerWidth * window.innerHeight) / 4000 // Increased density
       );
 
       for (let i = 0; i < numStars; i++) {
         stars.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          size: Math.random() * 2 + 1.5,
-          opacity: Math.random() * 0.3 + 0.5,
-          speed: Math.random() * 0.3 + 0.1,
-          angle: Math.random() * Math.PI * 2,
+          size: Math.random() * 1.0 + 0.5, // Smaller stars
+          opacity: Math.random() * 0.7 + 0.8, // More consistent brightness
           originalX: 0,
           originalY: 0,
-          twinkleSpeed: Math.random() * 0.02 + 0.01,
-          twinklePhase: Math.random() * Math.PI * 2,
           velocityX: 0,
           velocityY: 0,
           hue: Math.random() * 40 + 230,
+          angle: Math.random() * Math.PI * 4,
+          speed: Math.random() * 0.4 + 0.4, // Very slow autonomous movement
         });
       }
 
@@ -89,34 +86,6 @@ export const StarBackground: React.FC = () => {
         originalX: star.x,
         originalY: star.y,
       }));
-    };
-
-    const updateStar = (star: Star, deltaTime: number) => {
-      star.velocityX *= 0.95;
-      star.velocityY *= 0.95;
-      star.x += star.velocityX;
-      star.y += star.velocityY;
-
-      star.angle += (Math.random() - 0.5) * 0.1;
-      star.x += Math.cos(star.angle) * star.speed;
-      star.y += Math.sin(star.angle) * star.speed;
-
-      if (star.x < 0) star.x = canvas.width;
-      if (star.x > canvas.width) star.x = 0;
-      if (star.y < 0) star.y = canvas.height;
-      if (star.y > canvas.height) star.y = 0;
-
-      star.originalX = star.x;
-      star.originalY = star.y;
-
-      star.twinklePhase += star.twinkleSpeed * deltaTime;
-      const twinkle = Math.sin(star.twinklePhase) * 0.3 + 0.7;
-
-      if (!isDarkMode) {
-        star.hue = ((star.hue + 0.1) % 60) + 220;
-      }
-
-      return twinkle;
     };
 
     const draw = (timestamp: number) => {
@@ -131,56 +100,65 @@ export const StarBackground: React.FC = () => {
       const mouseX = mousePosition.x;
       const mouseY = mousePosition.y;
 
-      stars.forEach((star) => {
-        const twinkle = updateStar(star, deltaTime);
+      // Calculate mouse movement direction and speed
+      const mouseDeltaX = mouseX - lastMousePosition.current.x;
+      const mouseDeltaY = mouseY - lastMousePosition.current.y;
+      const mouseSpeed = Math.sqrt(
+        mouseDeltaX * mouseDeltaX + mouseDeltaY * mouseDeltaY
+      );
 
+      lastMousePosition.current = { x: mouseX, y: mouseY };
+
+      stars.forEach((star) => {
+        // Gentle autonomous movement
+        star.angle += 0.02; // Very slow rotation
+        const autonomousX = Math.cos(star.angle) * star.speed;
+        const autonomousY = Math.sin(star.angle) * star.speed;
+
+        // Apply gentle force in the opposite direction of mouse movement
         const dx = mouseX - star.x;
         const dy = mouseY - star.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        const maxDistance = 120;
-        const repulsionStrength = 15;
+        const maxDistance = 100000; // Reduced influence radius
+        const repulsionStrength = 0.3; // Reduced repulsion strength further
 
-        let influence = Math.max(0, 1 - distance / maxDistance);
-        influence = influence * influence * influence;
-
-        if (influence > 0) {
-          const angle = Math.atan2(dy, dx);
-          const force = repulsionStrength * influence;
-
-          star.velocityX -= Math.cos(angle) * force;
-          star.velocityY -= Math.sin(angle) * force;
-          star.x -= Math.cos(angle) * force * 0.5;
-          star.y -= Math.sin(angle) * force * 0.5;
+        if (distance < maxDistance && mouseSpeed > 0.1) {
+          const influence = Math.pow(1 - distance / maxDistance, 2);
+          star.velocityX -=
+            (mouseDeltaX / mouseSpeed) * repulsionStrength * influence;
+          star.velocityY -=
+            (mouseDeltaY / mouseSpeed) * repulsionStrength * influence;
         }
 
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size * (1 + influence), 0, Math.PI * 2);
+        // Update position with both autonomous movement and velocity
+        star.x += star.velocityX + autonomousX;
+        star.y += star.velocityY + autonomousY;
 
-        const finalOpacity = star.opacity * twinkle * (1 + influence * 2);
+        // Apply friction
+        star.velocityX *= 0.95;
+        star.velocityY *= 0.95;
+
+        // Return to original position (very gently)
+        const returnStrength = 0.01;
+        star.velocityX += (star.originalX - star.x) * returnStrength;
+        star.velocityY += (star.originalY - star.y) * returnStrength;
+
+        // Draw star
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+
+        const finalOpacity = star.opacity;
 
         if (isDarkMode) {
           ctx.fillStyle = `rgba(255, 255, 255, ${finalOpacity})`;
+          // Add glow effect in dark mode
+          ctx.shadowColor = "rgba(255, 255, 255, 0.5)";
+          ctx.shadowBlur = 2;
         } else {
-          ctx.fillStyle = `rgba(130, 130, 130, ${finalOpacity * 1.5})`;
+          ctx.fillStyle = `rgba(100, 100, 100, ${finalOpacity * 1.2})`;
+          ctx.shadowBlur = 0;
         }
         ctx.fill();
-
-        if (influence > 0) {
-          ctx.beginPath();
-          ctx.arc(
-            star.x,
-            star.y,
-            star.size * (2 + influence * 3),
-            0,
-            Math.PI * 2
-          );
-          if (isDarkMode) {
-            ctx.fillStyle = `rgba(255, 255, 255, ${finalOpacity * 0.3})`;
-          } else {
-            ctx.fillStyle = `rgba(130, 130, 130, ${finalOpacity * 0.6})`;
-          }
-          ctx.fill();
-        }
       });
 
       animationFrameRef.current = requestAnimationFrame(draw);
@@ -208,7 +186,7 @@ export const StarBackground: React.FC = () => {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-0"
-      style={{ opacity: 0.7 }}
+      style={{ opacity: 0.8 }}
     />
   );
 };

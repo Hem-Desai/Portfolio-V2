@@ -8,7 +8,13 @@ import {
 
 const UPDATE_INTERVAL = 30000; // 30 seconds
 
-export const SpotifyWidget: React.FC = () => {
+interface SpotifyWidgetProps {
+  onTrackClick?: () => void;
+}
+
+export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
+  onTrackClick,
+}) => {
   const [track, setTrack] = useState<SpotifyTrack | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -247,6 +253,7 @@ export const SpotifyWidget: React.FC = () => {
                 href={track.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={onTrackClick}
                 className="flex items-center gap-1 text-xs font-medium text-black dark:text-white 
                   hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors truncate"
               >
