@@ -22,7 +22,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ onThemeToggle }) => {
       onClick={handleClick}
       className="fixed top-6 right-6
         text-black dark:text-white
-        hover:scale-110 transition-all duration-300"
+        hover:scale-110 transition-all duration-300 z-50"
       aria-label="Toggle theme"
     >
       <div className={`theme-icon ${isRotating ? "rotating" : ""}`}>

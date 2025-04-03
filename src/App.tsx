@@ -1,6 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Github, Mail, Download, Trophy, Music, Paperclip } from "lucide-react";
+import {
+  Github,
+  Mail,
+  Download,
+  Trophy,
+  Music,
+  Paperclip,
+  Linkedin,
+} from "lucide-react";
 import { AmbientPlayer } from "./components/AmbientPlayer";
 import { SkillTree } from "./components/SkillTree";
 import { KudosButton } from "./components/KudosButton";
@@ -10,6 +18,7 @@ import { ThemeToggle } from "./components/ThemeToggle";
 import { ProjectCarousel } from "./components/ProjectCarousel";
 import { StarBackground } from "./components/StarBackground";
 import { Confetti } from "./components/Confetti";
+import { ImageViewer } from "./components/ImageViewer";
 
 // Achievement definitions
 const ACHIEVEMENTS = {
@@ -63,6 +72,11 @@ const ACHIEVEMENTS = {
     title: "Tech Curious",
     description: "Explored the skill tree",
   },
+  PROFILE_HOVER: {
+    id: "profile_hover",
+    title: "Curious Observer",
+    description: "Hovered over my profile for suspiciously long time",
+  },
 };
 
 const SPOTIFY_AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${
@@ -115,13 +129,16 @@ function MainContent() {
   const [mounted, setMounted] = useState(false);
   const [achievements, setAchievements] = useState<Set<string>>(new Set());
   const [showAchievementsPanel, setShowAchievementsPanel] = useState(false);
-  const [socialsVisible, setSocialsVisible] = useState(false);
   const [socialClicks, setSocialClicks] = useState<Set<string>>(new Set());
   const [confettiTrigger, setConfettiTrigger] = useState(false);
   const [readStartTime, setReadStartTime] = useState<number | null>(null);
   const [visitedSections, setVisitedSections] = useState<Set<string>>(
     new Set()
   );
+  const [showImageViewer, setShowImageViewer] = useState(false);
+  const [profileHoverProgress, setProfileHoverProgress] = useState(0);
+  const [isHovering, setIsHovering] = useState(false);
+  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -165,8 +182,8 @@ function MainContent() {
     const newSocialClicks = new Set(socialClicks).add(platform);
     setSocialClicks(newSocialClicks);
 
-    if (newSocialClicks.size === 3) {
-      // Changed to 3 to include all social links
+    if (newSocialClicks.size === 4) {
+      // Changed to 4 to include all social links (email, GitHub, LinkedIn, resume)
       unlockAchievement(ACHIEVEMENTS.ALL_SOCIALS);
     }
   };
@@ -177,6 +194,55 @@ function MainContent() {
 
   const handleResumeDownload = () => {
     unlockAchievement(ACHIEVEMENTS.RESUME);
+  };
+
+  const copyEmailToClipboard = () => {
+    const email = "hemniraldesai@gmail.com";
+    navigator.clipboard
+      .writeText(email)
+      .then(() => {
+        // Create toast container if it doesn't exist
+        let toastContainer = document.getElementById("toast-container");
+        if (!toastContainer) {
+          toastContainer = document.createElement("div");
+          toastContainer.id = "toast-container";
+          toastContainer.className =
+            "fixed bottom-16 left-0 right-0 flex justify-center items-center z-50 pointer-events-none";
+          document.body.appendChild(toastContainer);
+        }
+
+        // Create the toast notification
+        const toast = document.createElement("div");
+        toast.className =
+          "bg-white/90 dark:bg-zinc-800/90 text-black dark:text-white px-4 py-2 rounded-lg shadow-lg animate-fade-up flex items-center gap-2 border border-zinc-200/20 dark:border-zinc-700/20 pointer-events-auto";
+        toast.innerHTML =
+          '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Email copied to clipboard!</span>';
+
+        toastContainer.appendChild(toast);
+
+        // Remove the toast after 2 seconds
+        setTimeout(() => {
+          toast.classList.add(
+            "opacity-0",
+            "transition-opacity",
+            "duration-300"
+          );
+          setTimeout(() => {
+            if (toast.parentNode === toastContainer) {
+              toastContainer.removeChild(toast);
+            }
+            // Remove container if empty
+            if (toastContainer.children.length === 0) {
+              document.body.removeChild(toastContainer);
+            }
+          }, 300);
+        }, 2000);
+
+        handleSocialClick("email");
+      })
+      .catch((err) => {
+        console.error("Could not copy email: ", err);
+      });
   };
 
   // Add handlers for other achievements
@@ -192,6 +258,43 @@ function MainContent() {
     unlockAchievement(ACHIEVEMENTS.SKILL_EXPLORER);
   };
 
+  // Add new handler for profile hover achievement
+  const handleProfileHoverStart = () => {
+    setIsHovering(true);
+    setProfileHoverProgress(0);
+
+    // Clear any existing timer
+    if (hoverTimerRef.current) {
+      clearInterval(hoverTimerRef.current);
+    }
+
+    // Set up a timer to increment progress
+    const startTime = Date.now();
+    const duration = 4000; // 4 seconds
+
+    hoverTimerRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      setProfileHoverProgress(progress);
+
+      if (progress >= 1) {
+        // Achievement unlocked!
+        unlockAchievement(ACHIEVEMENTS.PROFILE_HOVER);
+        clearInterval(hoverTimerRef.current!);
+      }
+    }, 50);
+  };
+
+  const handleProfileHoverEnd = () => {
+    setIsHovering(false);
+    setProfileHoverProgress(0);
+
+    if (hoverTimerRef.current) {
+      clearInterval(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-900 text-black dark:text-white">
       <StarBackground />
@@ -204,7 +307,7 @@ function MainContent() {
         bg-white/10 dark:bg-zinc-800/90 backdrop-blur-sm
         rounded-lg shadow-lg border border-white/20 dark:border-zinc-700/50
         text-black dark:text-white hover:bg-white/20 dark:hover:bg-zinc-700/90
-        transition-all duration-300"
+        transition-all duration-300 z-50"
       >
         <Trophy className="w-4 h-4 text-emerald-500" />
         <span className="font-medium text-emerald-500">
@@ -220,7 +323,7 @@ function MainContent() {
         <div
           className="fixed bottom-16 left-4 w-72 bg-white/10 dark:bg-zinc-800/90 backdrop-blur-sm p-4 
           rounded-lg shadow-lg border border-white/20 dark:border-zinc-700/50
-          transition-all duration-300 transform"
+          transition-all duration-300 transform z-50"
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-black dark:text-white">
@@ -279,79 +382,134 @@ function MainContent() {
       <main className="max-w-2xl mx-auto space-y-8 p-6 md:p-12 py-24">
         {/* Intro */}
         <section className="animate-fade-in">
-          <div className="mb-6">
-            <span
-              onClick={handleNameClick}
-              className="text-4xl font-normal hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-300 cursor-pointer inline-block"
-            >
-              Hem Desai.
-            </span>
-            <p className="text-lg text-black/80 dark:text-white/80 mt-2">
-              Software developer based in Ahmedabad, focused on building minimal
-              and functional web applications.
-            </p>
-          </div>
-
-          {/* Social Links */}
-          <div className="relative inline-block mb-1">
-            <button
-              onClick={() => setSocialsVisible(!socialsVisible)}
-              className="p-2 rounded-full hover:bg-indigo-500/10 hover:ring-2 hover:ring-indigo-500/20 transition-all duration-300 group"
-              aria-label="Toggle social links"
-            >
-              <Paperclip className="w-5 h-5 text-black dark:text-white group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors duration-300" />
-            </button>
-
+          <div className="mb-12 flex flex-col md:flex-row items-center md:items-start gap-6">
+            {/* Profile Picture with Progress Ring */}
             <div
-              className={`absolute left-full ml-4 top-0 flex items-center gap-4 pl-2
-              transition-all duration-500 ease-out
-              ${
-                socialsVisible
-                  ? "opacity-100 translate-x-0"
-                  : "opacity-0 -translate-x-4 pointer-events-none"
-              }`}
+              className="relative w-28 h-28 md:w-36 md:h-36 flex-shrink-0"
+              onMouseEnter={handleProfileHoverStart}
+              onMouseLeave={handleProfileHoverEnd}
+              onTouchStart={handleProfileHoverStart}
+              onTouchEnd={handleProfileHoverEnd}
             >
-              <a
-                href="mailto:hemniraldesai@gmail.com"
-                className="p-2 rounded-full bg-white/10 backdrop-blur-sm 
-                  hover:text-indigo-500 dark:hover:text-indigo-400
-                  flex items-center gap-2 text-black dark:text-white 
-                  transition-colors duration-300"
-                onClick={() => handleSocialClick("email")}
+              {/* Circular Progress Indicator - Only visible during hover */}
+              {isHovering && (
+                <svg
+                  className="absolute inset-0 w-full h-full rotate-[-90deg] z-10"
+                  viewBox="0 0 100 100"
+                >
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="48"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.1)"
+                    strokeWidth="3"
+                  />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="48"
+                    fill="none"
+                    stroke="#A5B4FC" /* Pastel indigo color */
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeDasharray={`${profileHoverProgress * 301.6} 301.6`}
+                    style={{ transition: "stroke-dasharray 50ms linear" }}
+                  />
+                </svg>
+              )}
+
+              {/* Profile Image */}
+              <div className="absolute inset-[2px] rounded-full overflow-hidden border border-zinc-800/50 dark:border-zinc-800/50 shadow-xl">
+                <img
+                  src="/images/profile.jpg"
+                  alt="Hem Desai"
+                  className="w-full h-full object-cover"
+                  onClick={() => setShowImageViewer(true)}
+                  style={{ cursor: "pointer" }}
+                />
+              </div>
+            </div>
+
+            <div className="text-center md:text-left">
+              <h1
+                onClick={handleNameClick}
+                className="text-3xl md:text-5xl font-medium text-black dark:text-white hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-300 cursor-pointer tracking-tight"
               >
-                <Mail size={16} />
-              </a>
-              <a
-                href="https://github.com/Hem-Desai"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 rounded-full bg-white/10 backdrop-blur-sm 
-                  hover:text-indigo-500 dark:hover:text-indigo-400
-                  flex items-center gap-2 text-black dark:text-white 
-                  transition-colors duration-300"
-                onClick={() => handleSocialClick("github")}
-              >
-                <Github size={16} />
-              </a>
-              <button
-                onClick={() => {
-                  handleResumeDownload();
-                  handleSocialClick("resume");
-                }}
-                className="p-2 rounded-full bg-white/10 backdrop-blur-sm 
-                  hover:text-indigo-500 dark:hover:text-indigo-400
-                  flex items-center gap-2 text-black dark:text-white 
-                  transition-colors duration-300"
-              >
-                <Download size={16} />
-              </button>
+                Hem Desai.
+              </h1>
+              <p className="text-lg text-black/80 dark:text-white/80 mt-2 font-light tracking-wide">
+                Software developer from Ahmedabad, building stuff, and
+                occasionally questioning my life choices after a late-night
+                gaming session.
+              </p>
+
+              {/* Social Links */}
+              <div className="flex items-center justify-center md:justify-start gap-4 mt-4">
+                <button
+                  onClick={copyEmailToClipboard}
+                  className="p-2 rounded-full bg-zinc-800/80 backdrop-blur-sm 
+                    hover:text-indigo-400 hover:bg-zinc-700/80
+                    flex items-center gap-2 text-white 
+                    transition-all duration-300 hover:scale-110"
+                  aria-label="Copy email address"
+                  title="Copy email: hemniraldesai@gmail.com"
+                >
+                  <Mail size={18} />
+                </button>
+                <a
+                  href="https://github.com/Hem-Desai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-full bg-zinc-800/80 backdrop-blur-sm 
+                    hover:text-indigo-400 hover:bg-zinc-700/80
+                    flex items-center gap-2 text-white 
+                    transition-all duration-300 hover:scale-110"
+                  onClick={() => handleSocialClick("github")}
+                  aria-label="Visit my GitHub"
+                  title="GitHub: @Hem-Desai"
+                >
+                  <Github size={18} />
+                </a>
+                <a
+                  href="https://www.linkedin.com/in/hem-desai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-full bg-zinc-800/80 backdrop-blur-sm 
+                    hover:text-indigo-400 hover:bg-zinc-700/80
+                    flex items-center gap-2 text-white 
+                    transition-all duration-300 hover:scale-110"
+                  onClick={() => handleSocialClick("linkedin")}
+                  aria-label="Visit my LinkedIn profile"
+                  title="LinkedIn: @hem-desai"
+                >
+                  <Linkedin size={18} />
+                </a>
+                <a
+                  href="/resume.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-full bg-zinc-800/80 backdrop-blur-sm 
+                    hover:text-indigo-400 hover:bg-zinc-700/80
+                    flex items-center gap-2 text-white 
+                    transition-all duration-300 hover:scale-110"
+                  onClick={() => {
+                    handleResumeDownload();
+                    handleSocialClick("resume");
+                  }}
+                  aria-label="View my resume"
+                  title="View resume"
+                >
+                  <Download size={18} />
+                </a>
+              </div>
             </div>
           </div>
         </section>
 
         {/* Work Experience */}
         <section className="animate-fade-in animation-delay-200">
-          <h2 className="text-2xl font-medium text-black dark:text-white mb-5">
+          <h2 className="text-2xl font-medium text-black dark:text-white mb-5 tracking-tight">
             Work Experience
           </h2>
           <div className="space-y-6">
@@ -360,14 +518,14 @@ function MainContent() {
                 <h3 className="text-lg font-normal text-black dark:text-white hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-300">
                   AIVOA
                 </h3>
-                <span className="text-sm font-normal text-black dark:text-white">
+                <span className="text-sm font-light text-black dark:text-white">
                   Jan 2025 - Present
                 </span>
               </div>
-              <p className="text-black dark:text-white text-sm font-normal mb-2">
+              <p className="text-black dark:text-white text-sm font-medium mb-2">
                 Software Developer Intern
               </p>
-              <ul className="text-black dark:text-white text-sm font-normal space-y-1">
+              <ul className="text-black dark:text-white text-sm font-light space-y-1">
                 <li>• Developing Pharma CRM API</li>
                 <li>• AI-Driven Content Generation</li>
                 <li>• Backend Development & Database Management</li>
@@ -380,14 +538,14 @@ function MainContent() {
                 <h3 className="text-lg font-normal text-black dark:text-white hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-300">
                   Synergy Technical Club
                 </h3>
-                <span className="text-sm font-normal text-black dark:text-white">
+                <span className="text-sm font-light text-black dark:text-white">
                   June 2022 - July 2024
                 </span>
               </div>
-              <p className="text-black dark:text-white text-sm font-normal mb-2">
+              <p className="text-black dark:text-white text-sm font-medium mb-2">
                 Vice President
               </p>
-              <ul className="text-black dark:text-white text-sm font-normal space-y-1">
+              <ul className="text-black dark:text-white text-sm font-light space-y-1">
                 <li>• Mentored and Guided Members</li>
                 <li>• Led and Managed Club Activities</li>
                 <li>• Organized Technical Events</li>
@@ -399,7 +557,7 @@ function MainContent() {
 
         {/* Projects */}
         <section className="animate-fade-in animation-delay-300">
-          <h2 className="text-2xl font-medium text-black dark:text-white mb-8">
+          <h2 className="text-2xl font-medium text-black dark:text-white mb-8 tracking-tight">
             Projects
           </h2>
           <ProjectCarousel projects={PROJECTS} />
@@ -407,7 +565,7 @@ function MainContent() {
 
         {/* Skills */}
         <section className="animate-fade-in animation-delay-400">
-          <h2 className="text-2xl font-medium text-black dark:text-white mb-8">
+          <h2 className="text-2xl font-medium text-black dark:text-white mb-8 tracking-tight">
             Skills
           </h2>
           <SkillTree onInteraction={handleSkillInteraction} />
@@ -415,40 +573,68 @@ function MainContent() {
 
         {/* About */}
         <section className="animate-fade-in animation-delay-500">
-          <h2 className="text-2xl font-medium text-black dark:text-white mb-8">
+          <h2 className="text-2xl font-medium text-black dark:text-white mb-8 tracking-tight">
             About
           </h2>
-          <p className="text-black dark:text-white font-normal">
-            Currently working as a Software Developer Intern at AIVOA, focusing
-            on AI-driven solutions and backend development. Previously led
-            technical initiatives at Synergy Technical Club. Passionate about
-            AI/ML, minimal design, and building functional web applications.
-          </p>
+          <div>
+            <p className="text-black dark:text-white font-light leading-relaxed tracking-wide mb-5">
+              Hey there, I’m Hem. Welcome to my little corner of the internet,
+              where I turn caffeine and curiosity into AI-driven software,
+              backend systems, and things that (hopefully) don’t break in
+              production.
+            </p>
+            <p className="text-black dark:text-white font-light leading-relaxed tracking-wide">
+              When I’m not coding, I’m either grinding through a FIFA career
+              mode, watching football, or dissecting films. I like functional
+              software, clean interfaces, and tech that doesn’t need a manual to
+              use. Whether it’s an AI model, an automation tool, or a side
+              project I started at 2 AM, I believe in building things that
+              actually work—unlike EA servers.
+            </p>
+          </div>
         </section>
       </main>
-      <div className="relative min-h-screen">
+
+      {/* Footer section with controls and Spotify */}
+      <footer className="pb-28 relative z-40">
         <ThemeToggle onThemeToggle={handleThemeToggle} />
-        {localStorage.getItem("spotifyRefreshToken") ? (
-          <SpotifyWidget
-            onTrackClick={() => unlockAchievement(ACHIEVEMENTS.SPOTIFY_CONNECT)}
-          />
-        ) : (
-          <a
-            href={SPOTIFY_AUTH_URL}
-            className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 
-              bg-white/10 backdrop-blur-sm rounded-lg border border-zinc-200/20 dark:border-zinc-700/20 
-              text-black dark:text-white hover:bg-white/20 transition-all duration-300"
-          >
-            <Music className="w-4 h-4" />
-            Connect Spotify
-          </a>
-        )}
         <KudosButton
           onFirstKudos={() => unlockAchievement(ACHIEVEMENTS.KUDOS_FIRST)}
           onAllKudos={() => unlockAchievement(ACHIEVEMENTS.KUDOS_ALL)}
         />
         <AmbientPlayer onAllSoundsPlayed={handleAmbientSoundComplete} />
-      </div>
+
+        {/* Centered Spotify widget at the bottom */}
+        <div className="flex justify-center items-center w-full mt-10 mb-6">
+          {localStorage.getItem("spotifyRefreshToken") ? (
+            <div className="relative w-56 mx-auto">
+              <SpotifyWidget
+                onTrackClick={() =>
+                  unlockAchievement(ACHIEVEMENTS.SPOTIFY_CONNECT)
+                }
+              />
+            </div>
+          ) : (
+            <a
+              href={SPOTIFY_AUTH_URL}
+              className="flex items-center gap-2 px-3 py-1.5
+                bg-white/10 backdrop-blur-sm rounded-lg border border-zinc-200/20 dark:border-zinc-700/20 
+                text-black dark:text-white hover:bg-white/20 transition-all duration-300 text-sm"
+            >
+              <Music className="w-3.5 h-3.5" />
+              Connect Spotify
+            </a>
+          )}
+        </div>
+      </footer>
+
+      {showImageViewer && (
+        <ImageViewer
+          src="/images/profile.jpg"
+          alt="Hem Desai"
+          onClose={() => setShowImageViewer(false)}
+        />
+      )}
     </div>
   );
 }

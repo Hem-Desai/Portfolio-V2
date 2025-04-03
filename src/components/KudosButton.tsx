@@ -80,10 +80,10 @@ export const KudosButton: React.FC<KudosButtonProps> = ({
       {flyingEmoji.map(({ emoji, id }) => (
         <div
           key={id}
-          className="fixed pointer-events-none"
+          className="fixed pointer-events-none z-50"
           style={{
             right: "5rem",
-            bottom: "5rem",
+            bottom: "20rem",
             animation: "flyEmoji 1s ease-out forwards",
           }}
         >
@@ -92,7 +92,7 @@ export const KudosButton: React.FC<KudosButtonProps> = ({
       ))}
 
       {/* Rest of the component */}
-      <div className="fixed bottom-36 right-4 flex items-center">
+      <div className="fixed bottom-20 right-4 flex items-center z-50">
         {/* Main Button */}
         <div ref={pickerRef}>
           <button

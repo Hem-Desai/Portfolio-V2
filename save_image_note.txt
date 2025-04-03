@@ -1,0 +1,1 @@
+"The image needs to be saved separately to public/images/profile.jpg" 

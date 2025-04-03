@@ -39,6 +39,7 @@ export const AmbientPlayer: React.FC<AmbientPlayerProps> = ({
 }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.15);
+  const [previousVolume, setPreviousVolume] = useState(0.15);
   const [currentSound, setCurrentSound] = useState<SoundOption>(
     SOUND_OPTIONS[0]
   );
@@ -46,7 +47,7 @@ export const AmbientPlayer: React.FC<AmbientPlayerProps> = ({
   const [playedSounds, setPlayedSounds] = useState<Set<string>>(new Set());
 
   const [play, { sound, stop }] = useSound(currentSound.url, {
-    volume: volume,
+    volume: isMuted ? 0 : volume,
     loop: true,
     interrupt: true,
   });
@@ -56,20 +57,23 @@ export const AmbientPlayer: React.FC<AmbientPlayerProps> = ({
       play();
     }
     return () => stop();
-  }, [play, stop, currentSound]);
+  }, [play, stop, currentSound, isMuted]);
 
   // Add effect to update volume
   useEffect(() => {
     if (sound) {
-      sound.volume(volume);
+      sound.volume(isMuted ? 0 : volume);
     }
-  }, [sound, volume]);
+  }, [sound, volume, isMuted]);
 
   const toggleMute = () => {
-    setIsMuted(!isMuted);
     if (isMuted) {
+      setVolume(previousVolume);
+      setIsMuted(false);
       play();
     } else {
+      setPreviousVolume(volume);
+      setIsMuted(true);
       stop();
     }
   };
@@ -93,11 +97,22 @@ export const AmbientPlayer: React.FC<AmbientPlayerProps> = ({
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
+    setPreviousVolume(newVolume);
+
+    if (isMuted && newVolume > 0) {
+      setIsMuted(false);
+      play();
+    }
+
+    if (!isMuted && newVolume === 0) {
+      setIsMuted(true);
+      stop();
+    }
   };
 
   return (
     <div
-      className="fixed bottom-4 right-4 flex items-center gap-2"
+      className="fixed bottom-6 right-4 flex items-center gap-2 z-50"
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
     >
@@ -114,7 +129,7 @@ export const AmbientPlayer: React.FC<AmbientPlayerProps> = ({
             min="0"
             max="1"
             step="0.01"
-            value={volume}
+            value={isMuted ? 0 : volume}
             onChange={handleVolumeChange}
             className="w-20 h-1 bg-zinc-300 dark:bg-white/30 rounded-lg appearance-none cursor-pointer 
               [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 

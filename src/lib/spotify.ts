@@ -1,4 +1,4 @@
-import { SpotifyApi } from "@spotify/web-api-ts-sdk";
+import { SpotifyApi, AccessToken } from "@spotify/web-api-ts-sdk";
 
 const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const clientSecret = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET;
@@ -8,78 +8,127 @@ if (!clientId || !clientSecret) {
 }
 
 async function getAccessToken() {
+  // Check if we have a valid access token
+  const accessToken = localStorage.getItem("spotifyAccessToken");
+  const tokenExpiry = localStorage.getItem("spotifyTokenExpiry");
+
+  if (accessToken && tokenExpiry && Date.now() < parseInt(tokenExpiry)) {
+    return accessToken;
+  }
+
+  // If not, refresh the token
   const refreshToken = localStorage.getItem("spotifyRefreshToken");
   if (!refreshToken) {
     throw new Error("No refresh token available");
   }
 
-  const response = await fetch("https://accounts.spotify.com/api/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
-    },
-    body: new URLSearchParams({
-      grant_type: "refresh_token",
-      refresh_token: refreshToken,
-    }),
-  });
+  try {
+    const response = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+      },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+      }),
+    });
 
-  if (!response.ok) {
-    throw new Error("Failed to refresh token");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error_description || "Failed to refresh token");
+    }
+
+    const data = await response.json();
+
+    // Update stored tokens
+    localStorage.setItem("spotifyAccessToken", data.access_token);
+    localStorage.setItem(
+      "spotifyTokenExpiry",
+      String(Date.now() + data.expires_in * 1000)
+    );
+    if (data.refresh_token) {
+      localStorage.setItem("spotifyRefreshToken", data.refresh_token);
+    }
+
+    return data.access_token;
+  } catch (error) {
+    console.error("Error refreshing token:", error);
+    // Clear invalid tokens
+    localStorage.removeItem("spotifyAccessToken");
+    localStorage.removeItem("spotifyTokenExpiry");
+    localStorage.removeItem("spotifyRefreshToken");
+    throw error;
   }
-
-  const data = await response.json();
-  return data.access_token;
 }
 
 // Create a custom Spotify client that handles token refresh
 class CustomSpotifyClient {
   private api: SpotifyApi | null = null;
+  private lastError: Error | null = null;
+  private retryCount: number = 0;
+  private readonly MAX_RETRIES = 3;
 
   private async getApi() {
-    if (!this.api) {
-      const accessToken = await getAccessToken();
-      this.api = SpotifyApi.withAccessToken(clientId, {
-        access_token: accessToken,
-        token_type: "Bearer",
-        expires_in: 3600,
-      });
+    try {
+      if (!this.api || this.lastError) {
+        const accessToken = await getAccessToken();
+        this.api = SpotifyApi.withAccessToken(clientId, {
+          access_token: accessToken,
+          token_type: "Bearer",
+          expires_in: 3600,
+          refresh_token: localStorage.getItem("spotifyRefreshToken") || "",
+        } as AccessToken);
+        this.lastError = null;
+        this.retryCount = 0;
+      }
+      return this.api;
+    } catch (error) {
+      this.lastError =
+        error instanceof Error ? error : new Error("Failed to get Spotify API");
+      throw this.lastError;
     }
-    return this.api;
+  }
+
+  private async retryOperation<T>(operation: () => Promise<T>): Promise<T> {
+    try {
+      const result = await operation();
+      this.retryCount = 0;
+      return result;
+    } catch (error) {
+      this.lastError =
+        error instanceof Error ? error : new Error("Unknown error");
+
+      if (this.retryCount < this.MAX_RETRIES) {
+        this.retryCount++;
+        this.api = null; // Force new token on retry
+        return this.retryOperation(operation);
+      }
+
+      throw error;
+    }
   }
 
   async getCurrentlyPlayingTrack() {
-    try {
+    return this.retryOperation(async () => {
       const api = await this.getApi();
-      return await api.player.getCurrentlyPlayingTrack();
-    } catch (error) {
-      console.error("Error in getCurrentlyPlayingTrack:", error);
-      this.api = null; // Reset API instance on error
-      throw error;
-    }
+      return api.player.getCurrentlyPlayingTrack();
+    });
   }
 
   async getRecentlyPlayedTracks() {
-    try {
+    return this.retryOperation(async () => {
       const api = await this.getApi();
-      return await api.player.getRecentlyPlayedTracks();
-    } catch (error) {
-      console.error("Error in getRecentlyPlayedTracks:", error);
-      this.api = null; // Reset API instance on error
-      throw error;
-    }
+      return api.player.getRecentlyPlayedTracks();
+    });
   }
 
   async getAudioFeaturesForTrack(trackId: string) {
-    try {
+    return this.retryOperation(async () => {
       const api = await this.getApi();
-      return await api.tracks.audioFeatures(trackId);
-    } catch (error) {
-      console.error("Error in getAudioFeaturesForTrack:", error);
-      this.api = null; // Reset API instance on error
-      throw error;
-    }
+      return api.tracks.audioFeatures(trackId);
+    });
   }
 }
 
@@ -96,19 +145,33 @@ export interface SpotifyTrack {
   timestamp?: string;
 }
 
+interface SpotifyTrackItem {
+  id: string;
+  name: string;
+  artists: Array<{ name: string }>;
+  album: {
+    name: string;
+    images: Array<{ url: string }>;
+  };
+  external_urls: {
+    spotify: string;
+  };
+}
+
 // Function to get current or recently played track
 export async function getCurrentTrack(): Promise<SpotifyTrack | null> {
   try {
     const response = await spotify.getCurrentlyPlayingTrack();
 
-    if (response && response.item && "name" in response.item) {
+    if (response && response.item && "artists" in response.item) {
+      const track = response.item as SpotifyTrackItem;
       return {
-        id: response.item.id,
-        name: response.item.name,
-        artist: response.item.artists.map((a) => a.name).join(", "),
-        album: response.item.album.name,
-        albumArt: response.item.album.images[0]?.url,
-        url: response.item.external_urls.spotify,
+        id: track.id,
+        name: track.name,
+        artist: track.artists.map((artist) => artist.name).join(", "),
+        album: track.album.name,
+        albumArt: track.album.images[0]?.url,
+        url: track.external_urls.spotify,
         isPlaying: response.is_playing,
       };
     }
@@ -116,11 +179,11 @@ export async function getCurrentTrack(): Promise<SpotifyTrack | null> {
     // If no current track, get most recently played
     const recent = await spotify.getRecentlyPlayedTracks();
     if (recent.items.length > 0) {
-      const track = recent.items[0].track;
+      const track = recent.items[0].track as SpotifyTrackItem;
       return {
         id: track.id,
         name: track.name,
-        artist: track.artists.map((a) => a.name).join(", "),
+        artist: track.artists.map((artist) => artist.name).join(", "),
         album: track.album.name,
         albumArt: track.album.images[0]?.url,
         url: track.external_urls.spotify,

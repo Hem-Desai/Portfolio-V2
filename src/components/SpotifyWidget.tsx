@@ -18,26 +18,10 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
   const [track, setTrack] = useState<SpotifyTrack | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY + window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-      const threshold = documentHeight - 100; // Show when within 100px of bottom
-
-      setIsVisible(scrollPosition > threshold);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    handleScroll(); // Check initial position
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const fetchTrack = async (isManualRefresh = false) => {
     try {
@@ -162,19 +146,14 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
   }, []);
 
   if (error) {
-    return isVisible ? (
-      <div
-        className="fixed bottom-4 left-1/2 -translate-x-1/2 p-3 rounded-lg bg-white/10 backdrop-blur-sm 
-        border border-zinc-200/20 dark:border-zinc-700/20 text-black dark:text-white text-xs"
-      >
-        <Music2 className="w-3 h-3 mb-1" />
-        {error}
+    return (
+      <div className="w-full rounded-lg p-3 bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300">
+        <div className="flex items-center gap-2">
+          <Music2 className="w-4 h-4" />
+          <span>{error}</span>
+        </div>
       </div>
-    ) : null;
-  }
-
-  if (!isVisible) {
-    return null;
+    );
   }
 
   const formatLastUpdated = (date: Date) => {
@@ -191,9 +170,9 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
 
   return (
     <div
-      className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 rounded-lg overflow-hidden bg-white/10 backdrop-blur-sm 
-      border border-zinc-200/20 dark:border-zinc-700/20 group transition-all duration-300 opacity-0 translate-y-full
-      animate-fade-in hover:bg-white/20 dark:hover:bg-zinc-800/50 z-50"
+      className="w-full rounded-lg overflow-hidden bg-white/10 backdrop-blur-sm 
+      border border-zinc-200/20 dark:border-zinc-700/20 group transition-all duration-300
+      hover:bg-white/20 dark:hover:bg-zinc-800/50 z-30 animate-fade-up text-sm"
     >
       {/* Canvas for visualizer */}
       <canvas
@@ -212,7 +191,7 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
             title="Refresh now"
           >
             <RefreshCw
-              className={`w-3 h-3 ${isRefreshing ? "animate-spin" : ""}`}
+              className={`w-2.5 h-2.5 ${isRefreshing ? "animate-spin" : ""}`}
             />
           </button>
           {lastUpdated && (
@@ -223,9 +202,9 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
         </div>
 
         {isLoading ? (
-          <div className="flex items-center gap-2 text-black dark:text-white text-xs">
+          <div className="flex items-center justify-center gap-1.5 text-black dark:text-white text-xs py-1.5">
             <Music2 className="w-3 h-3 animate-pulse" />
-            Loading...
+            <span>Loading Spotify data...</span>
           </div>
         ) : track ? (
           <div className="flex items-center gap-2">
@@ -241,9 +220,9 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
               />
               <div className="absolute inset-0 bg-black/10" />
               {track.isPlaying ? (
-                <Pause className="absolute bottom-0.5 right-0.5 w-3 h-3 text-white drop-shadow-lg" />
+                <Pause className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 text-white drop-shadow-lg" />
               ) : (
-                <Play className="absolute bottom-0.5 right-0.5 w-3 h-3 text-white drop-shadow-lg" />
+                <Play className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 text-white drop-shadow-lg" />
               )}
             </div>
 
@@ -254,24 +233,24 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={onTrackClick}
-                className="flex items-center gap-1 text-xs font-medium text-black dark:text-white 
+                className="flex items-center gap-1 text-[11px] font-medium text-black dark:text-white 
                   hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors truncate"
               >
                 {track.name}
                 <ExternalLink className="w-2 h-2 flex-shrink-0" />
               </a>
-              <p className="text-[10px] text-black/60 dark:text-white/60 truncate">
+              <p className="text-[9px] text-black/60 dark:text-white/60 truncate">
                 {track.artist}
               </p>
-              <p className="text-[10px] text-black/40 dark:text-white/40">
+              <p className="text-[8px] text-black/40 dark:text-white/40">
                 {track.isPlaying ? "Now playing" : "Last played"}
               </p>
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-2 text-black dark:text-white text-xs">
+          <div className="flex items-center justify-center gap-1.5 text-black dark:text-white text-xs py-1.5">
             <Music2 className="w-3 h-3" />
-            No track data
+            <span>No track data available</span>
           </div>
         )}
       </div>

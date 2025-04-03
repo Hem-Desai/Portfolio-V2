@@ -61,16 +61,17 @@ export const StarBackground: React.FC = () => {
 
     const initStars = () => {
       const stars: Star[] = [];
+      const densityFactor = isDarkMode ? 5000 : 4000; // Less density in dark mode
       const numStars = Math.floor(
-        (window.innerWidth * window.innerHeight) / 4000 // Increased density
+        (window.innerWidth * window.innerHeight) / densityFactor
       );
 
       for (let i = 0; i < numStars; i++) {
         stars.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          size: Math.random() * 1.0 + 0.5, // Smaller stars
-          opacity: Math.random() * 0.7 + 0.8, // More consistent brightness
+          size: Math.random() * 0.7 + 0.3, // Smaller stars (was 1.0 + 0.5)
+          opacity: Math.random() * 0.5 + 0.3, // Lower opacity (was 0.7 + 0.8)
           originalX: 0,
           originalY: 0,
           velocityX: 0,
@@ -150,10 +151,10 @@ export const StarBackground: React.FC = () => {
         const finalOpacity = star.opacity;
 
         if (isDarkMode) {
-          ctx.fillStyle = `rgba(255, 255, 255, ${finalOpacity})`;
-          // Add glow effect in dark mode
-          ctx.shadowColor = "rgba(255, 255, 255, 0.5)";
-          ctx.shadowBlur = 2;
+          ctx.fillStyle = `rgba(255, 255, 255, ${finalOpacity * 0.6})`; // Reduced opacity in dark mode
+          // Add subtle glow effect in dark mode
+          ctx.shadowColor = "rgba(255, 255, 255, 0.3)"; // Reduced glow opacity
+          ctx.shadowBlur = 1; // Reduced glow size
         } else {
           ctx.fillStyle = `rgba(100, 100, 100, ${finalOpacity * 1.2})`;
           ctx.shadowBlur = 0;
@@ -186,7 +187,7 @@ export const StarBackground: React.FC = () => {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-0"
-      style={{ opacity: 0.8 }}
+      style={{ opacity: isDarkMode ? 0.6 : 0.8 }}
     />
   );
 };
