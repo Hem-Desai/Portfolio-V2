@@ -1,14 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import {
-  Github,
-  Mail,
-  Download,
-  Trophy,
-  Music,
-  Paperclip,
-  Linkedin,
-} from "lucide-react";
+import { Github, Mail, Download, Trophy, Music, Linkedin } from "lucide-react";
 import { AmbientPlayer } from "./components/AmbientPlayer";
 import { SkillTree } from "./components/SkillTree";
 import { KudosButton } from "./components/KudosButton";
@@ -126,22 +118,16 @@ const PROJECTS = [
 ];
 
 function MainContent() {
-  const [mounted, setMounted] = useState(false);
   const [achievements, setAchievements] = useState<Set<string>>(new Set());
   const [showAchievementsPanel, setShowAchievementsPanel] = useState(false);
   const [socialClicks, setSocialClicks] = useState<Set<string>>(new Set());
   const [confettiTrigger, setConfettiTrigger] = useState(false);
-  const [readStartTime, setReadStartTime] = useState<number | null>(null);
-  const [visitedSections, setVisitedSections] = useState<Set<string>>(
-    new Set()
-  );
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [profileHoverProgress, setProfileHoverProgress] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    setMounted(true);
     localStorage.removeItem("achievements");
     setAchievements(new Set());
 
