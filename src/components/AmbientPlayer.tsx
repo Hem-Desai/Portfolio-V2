@@ -17,19 +17,19 @@ const SOUND_OPTIONS: SoundOption[] = [
   {
     id: "piano",
     name: "Soft Piano",
-    url: "/src/assets/sounds/piano.mp3",
+    url: "/sounds/piano.mp3",
     icon: <Piano className="w-4 h-4" />,
   },
   {
     id: "rain",
     name: "Gentle Rain",
-    url: "/src/assets/sounds/rain.mp3",
+    url: "/sounds/rain.mp3",
     icon: <CloudRain className="w-4 h-4" />,
   },
   {
     id: "forest",
     name: "Forest Sounds",
-    url: "/src/assets/sounds/forest.mp3",
+    url: "/sounds/forest.mp3",
     icon: <Trees className="w-4 h-4" />,
   },
 ];

@@ -578,16 +578,16 @@ function MainContent() {
           </h2>
           <div>
             <p className="text-black dark:text-white font-light leading-relaxed tracking-wide mb-5">
-              Hey there, I’m Hem. Welcome to my little corner of the internet,
+              Hey there, I'm Hem. Welcome to my little corner of the internet,
               where I turn caffeine and curiosity into AI-driven software,
-              backend systems, and things that (hopefully) don’t break in
+              backend systems, and things that (hopefully) don't break in
               production.
             </p>
             <p className="text-black dark:text-white font-light leading-relaxed tracking-wide">
-              When I’m not coding, I’m either grinding through a FIFA career
+              When I'm not coding, I'm either grinding through a FIFA career
               mode, watching football, or dissecting films. I like functional
-              software, clean interfaces, and tech that doesn’t need a manual to
-              use. Whether it’s an AI model, an automation tool, or a side
+              software, clean interfaces, and tech that doesn't need a manual to
+              use. Whether it's an AI model, an automation tool, or a side
               project I started at 2 AM, I believe in building things that
               actually work—unlike EA servers.
             </p>
