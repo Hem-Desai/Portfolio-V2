@@ -76,7 +76,7 @@ const SPOTIFY_AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${
 }&response_type=code&redirect_uri=${encodeURIComponent(
   "http://localhost:5173/callback"
 )}&scope=${encodeURIComponent(
-  "user-read-currently-playing user-read-recently-played"
+  "user-read-currently-playing user-read-recently-played user-read-playback-state"
 )}`;
 
 // Add this before the MainContent function

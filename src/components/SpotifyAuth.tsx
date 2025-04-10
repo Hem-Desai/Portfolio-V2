@@ -6,15 +6,12 @@ const REDIRECT_URI =
   import.meta.env.VITE_SPOTIFY_REDIRECT_URI ||
   window.location.origin + "/callback";
 
-// Log the redirect URI to help with debugging
-console.log("Spotify Redirect URI:", REDIRECT_URI);
-
 const SPOTIFY_AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${
   import.meta.env.VITE_SPOTIFY_CLIENT_ID
 }&response_type=code&redirect_uri=${encodeURIComponent(
   REDIRECT_URI
 )}&scope=${encodeURIComponent(
-  "user-read-currently-playing user-read-recently-played"
+  "user-read-currently-playing user-read-recently-played user-read-playback-state"
 )}`;
 
 export const SpotifyAuth: React.FC = () => {

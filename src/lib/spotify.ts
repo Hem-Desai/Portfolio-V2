@@ -54,7 +54,6 @@ async function getAccessToken() {
 
     return data.access_token;
   } catch (error) {
-    console.error("Error refreshing token:", error);
     // Clear invalid tokens
     localStorage.removeItem("spotifyAccessToken");
     localStorage.removeItem("spotifyTokenExpiry");
@@ -126,8 +125,23 @@ class CustomSpotifyClient {
 
   async getAudioFeaturesForTrack(trackId: string) {
     return this.retryOperation(async () => {
-      const api = await this.getApi();
-      return api.tracks.audioFeatures(trackId);
+      try {
+        const api = await this.getApi();
+        const response = await api.tracks.audioFeatures(trackId);
+        return response;
+      } catch (error) {
+        // Check if this is a 403 error for audio features
+        if (
+          error instanceof Error &&
+          error.message.includes("403") &&
+          error.message.includes("audio-features")
+        ) {
+          // Return null instead of throwing for this specific error
+          return null;
+        }
+        // For other errors, still throw
+        throw error;
+      }
     });
   }
 }
@@ -194,7 +208,7 @@ export async function getCurrentTrack(): Promise<SpotifyTrack | null> {
 
     return null;
   } catch (error) {
-    console.error("Error fetching Spotify data:", error);
+    // Error handled silently
     return null;
   }
 }
@@ -202,9 +216,20 @@ export async function getCurrentTrack(): Promise<SpotifyTrack | null> {
 // Function to get audio features for visualizer
 export async function getTrackFeatures(trackId: string) {
   try {
-    return await spotify.getAudioFeaturesForTrack(trackId);
+    const features = await spotify.getAudioFeaturesForTrack(trackId);
+    // If features are null (due to 403), return a default object
+    if (!features) {
+      return {
+        danceability: 0.5,
+        energy: 0.5,
+        valence: 0.5,
+        tempo: 120,
+        // Add other default values as needed
+      };
+    }
+    return features;
   } catch (error) {
-    console.error("Error fetching track features:", error);
+    // Error handled silently
     return null;
   }
 }

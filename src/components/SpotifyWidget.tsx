@@ -36,7 +36,7 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
       setLastUpdated(new Date());
     } catch (err) {
       setError("Failed to load track data");
-      console.error(err);
+      // Error handled silently
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -109,12 +109,15 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
     };
 
     const startVisualizer = async () => {
-      const features = await getTrackFeatures(track.id);
-      if (features) {
+      try {
+        const features = await getTrackFeatures(track.id);
+        // Always start the visualizer, even if features are default values
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
         createParticles();
         animate();
+      } catch (error) {
+        // Silently handle any errors
       }
     };
 
@@ -130,14 +133,7 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
   // Add effect to check dimensions
   useEffect(() => {
     const checkDimensions = () => {
-      console.log("Viewport:", {
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-      console.log("Document:", {
-        width: document.documentElement.scrollWidth,
-        height: document.documentElement.scrollHeight,
-      });
+      // Dimensions check removed
     };
 
     checkDimensions();
