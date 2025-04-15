@@ -34,11 +34,6 @@ const ACHIEVEMENTS = {
     title: "Paper Trail",
     description: "Downloaded my resume",
   },
-  SPOTIFY_CONNECT: {
-    id: "spotify_connect",
-    title: "Music Enthusiast",
-    description: "Checked out what I'm listening to",
-  },
   KUDOS_FIRST: {
     id: "kudos_first",
     title: "First Impression",
@@ -593,7 +588,7 @@ function MainContent() {
         />
         <AmbientPlayer onAllSoundsPlayed={handleAmbientSoundComplete} />
 
-        {/* Centered Spotify widget at the bottom */}
+        {/* Spotify widget temporarily hidden
         <div className="flex justify-center items-center w-full mt-10 mb-6">
           {localStorage.getItem("spotifyRefreshToken") ? (
             <div className="relative w-56 mx-auto">
@@ -615,6 +610,7 @@ function MainContent() {
             </a>
           )}
         </div>
+        */}
       </footer>
 
       {showImageViewer && (
