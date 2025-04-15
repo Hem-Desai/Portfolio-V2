@@ -67,38 +67,38 @@ export const ProjectCarousel: React.FC<ProjectCarouselProps> = ({
           }}
         >
           {visibleProjects.map((project, index) => (
-            <div
+            <a
               key={`${project.title}-${index}`}
-              className="w-full flex-shrink-0 bg-white/5 backdrop-blur-sm rounded-xl p-8 
-                border border-zinc-200/10 dark:border-zinc-700/10 
-                hover:border-zinc-200/20 dark:hover:border-zinc-700/20 
-                transition-all duration-300 group hover:translate-y-[-2px]
-                transform-gpu flex flex-col min-h-[300px]"
+              href={project.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex-shrink-0 bg-white/80 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 
+                border border-zinc-200/50 dark:border-zinc-700/10 
+                hover:border-zinc-300 dark:hover:border-zinc-700/20 
+                transition-all duration-300 group overflow-hidden
+                transform-gpu flex flex-col min-h-[250px] cursor-pointer
+                shadow-sm hover:shadow-md hover:scale-[1.02] will-change-transform"
             >
-              <div className="flex items-start justify-between mb-6 gap-4">
-                <a
-                  href={project.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xl font-normal text-black dark:text-white group-hover:translate-x-2 transition-transform duration-300 hover:text-indigo-500 dark:hover:text-indigo-400"
-                >
+              <div className="flex items-start justify-between mb-4 gap-4">
+                <h3 className="text-lg font-normal text-black dark:text-white hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-300 flex items-center gap-1">
                   {project.title}
-                </a>
+                  <ExternalLink className="w-4 h-4" />
+                </h3>
               </div>
-              <p className="text-black/80 dark:text-white/80 text-sm font-normal mb-6 line-clamp-4 flex-grow">
+              <p className="text-black/80 dark:text-white/80 text-sm font-normal mb-4 line-clamp-4 flex-grow">
                 {project.description}
               </p>
               <div className="flex flex-wrap gap-2 mt-auto">
                 {project.technologies.map((tech) => (
                   <span
                     key={tech}
-                    className="text-xs font-normal bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full"
+                    className="text-xs font-normal text-black/70 dark:text-white/70 bg-zinc-100/80 dark:bg-zinc-800/80 px-3 py-1.5 rounded-full transition-colors duration-300"
                   >
                     {tech}
                   </span>
                 ))}
               </div>
-            </div>
+            </a>
           ))}
         </div>
       </div>
