@@ -74,8 +74,10 @@ const ACHIEVEMENTS = {
 const SPOTIFY_AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${
   import.meta.env.VITE_SPOTIFY_CLIENT_ID
 }&response_type=code&redirect_uri=${encodeURIComponent(
-  import.meta.env.VITE_SPOTIFY_REDIRECT_URI ||
-    window.location.origin + "/callback"
+  import.meta.env.PROD
+    ? import.meta.env.VITE_SPOTIFY_REDIRECT_URI
+    : import.meta.env.VITE_SPOTIFY_REDIRECT_URI ||
+        window.location.origin + "/callback"
 )}&scope=${encodeURIComponent(
   "user-read-currently-playing user-read-recently-played user-read-playback-state"
 )}`;

@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
 // Get redirect URI from environment variables, fallback to current origin if not set
-const REDIRECT_URI =
-  import.meta.env.VITE_SPOTIFY_REDIRECT_URI ||
-  window.location.origin + "/callback";
+const REDIRECT_URI = import.meta.env.PROD
+  ? import.meta.env.VITE_SPOTIFY_REDIRECT_URI
+  : import.meta.env.VITE_SPOTIFY_REDIRECT_URI ||
+    window.location.origin + "/callback";
 
 const SPOTIFY_AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${
   import.meta.env.VITE_SPOTIFY_CLIENT_ID
