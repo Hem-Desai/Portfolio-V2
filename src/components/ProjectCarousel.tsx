@@ -76,16 +76,13 @@ export const ProjectCarousel: React.FC<ProjectCarouselProps> = ({
                 transform-gpu flex flex-col min-h-[300px]"
             >
               <div className="flex items-start justify-between mb-6 gap-4">
-                <h3 className="text-xl font-normal text-black dark:text-white group-hover:translate-x-2 transition-transform duration-300">
-                  {project.title}
-                </h3>
                 <a
                   href={project.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-normal text-black/60 dark:text-white/60 hover:text-indigo-500 dark:hover:text-indigo-400 flex items-center gap-1 flex-shrink-0 hover:scale-105 transition-transform"
+                  className="text-xl font-normal text-black dark:text-white group-hover:translate-x-2 transition-transform duration-300 hover:text-indigo-500 dark:hover:text-indigo-400"
                 >
-                  View <ExternalLink className="w-4 h-4" />
+                  {project.title}
                 </a>
               </div>
               <p className="text-black/80 dark:text-white/80 text-sm font-normal mb-6 line-clamp-4 flex-grow">
