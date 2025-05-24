@@ -113,6 +113,13 @@ const PROJECTS = [
     link: "https://github.com/Hem-Desai/Sign-Language-Translator",
     technologies: ["JavaScript", "React", "Context API", "Flexbox"],
   },
+  {
+    title: "Kanye Says",
+    description: 
+      "Your pocket-sized Kanye West quote generator that drops Ye's most outrageous wisdom bombs",
+    link: "https://kanye-says-kohl.vercel.app/",
+    technologies: ["Next.js", "TypeScript", "TailwindCSS", "Framer Motion"],
+  },
 ];
 
 function MainContent() {
