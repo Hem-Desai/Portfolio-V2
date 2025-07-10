@@ -115,7 +115,7 @@ const PROJECTS = [
   },
   {
     title: "Kanye Says",
-    description: 
+    description:
       "Your pocket-sized Kanye West quote generator that drops Ye's most outrageous wisdom bombs",
     link: "https://kanye-says-kohl.vercel.app/",
     technologies: ["Next.js", "TypeScript", "TailwindCSS", "Framer Motion"],
@@ -507,20 +507,65 @@ function MainContent() {
             <div className="block group">
               <div className="flex items-baseline justify-between">
                 <h3 className="text-lg font-normal text-black dark:text-white hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-300">
-                  AIVOA
+                  <a
+                    href="https://redialbpo.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-300"
+                  >
+                    Redial BPO
+                  </a>
                 </h3>
                 <span className="text-sm font-light text-black dark:text-white">
-                  Jan 2025 - Present
+                  Jul 2025 - Present
+                </span>
+              </div>
+              <p className="text-black dark:text-white text-sm font-medium mb-2">
+                AI Developer
+              </p>
+              <ul className="text-black dark:text-white text-sm font-light space-y-1">
+                <li>
+                  • Building AI voice infrastructure and automation workflows
+                </li>
+                <li>• Designing scalable backend systems and APIs</li>
+                <li>• Optimizing cloud usage across AI service providers</li>
+              </ul>
+            </div>
+
+            <div className="block group">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-normal text-black dark:text-white hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-300">
+                  <a
+                    href="https://aivoa.net"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-300"
+                  >
+                    AIVOA
+                  </a>
+                </h3>
+                <span className="text-sm font-light text-black dark:text-white">
+                  Jan 2025 - July 2025
                 </span>
               </div>
               <p className="text-black dark:text-white text-sm font-medium mb-2">
                 Software Developer Intern
               </p>
               <ul className="text-black dark:text-white text-sm font-light space-y-1">
-                <li>• Developing Pharma CRM API</li>
-                <li>• AI-Driven Content Generation</li>
-                <li>• Backend Development & Database Management</li>
-                <li>• Workflow Automation using Temporal</li>
+                <li>
+                  • Developed Pharma CRM API with comprehensive patient
+                  management features
+                </li>
+                <li>
+                  • Implemented AI-driven content generation for medical
+                  documentation
+                </li>
+                <li>
+                  • Built robust backend systems with PostgreSQL and Node.js
+                </li>
+                <li>
+                  • Created workflow automation solutions using Temporal.io
+                </li>
               </ul>
             </div>
 
