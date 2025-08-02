@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Github, Mail, Download, Trophy, Music, Linkedin } from "lucide-react";
+import { Github, Mail, Download, Trophy, Linkedin } from "lucide-react";
 import { AmbientPlayer } from "./components/AmbientPlayer";
 import { SkillTree } from "./components/SkillTree";
 import { KudosButton } from "./components/KudosButton";
-import { SpotifyWidget } from "./components/SpotifyWidget";
+
 import { SpotifyAuth } from "./components/SpotifyAuth";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { ProjectCarousel } from "./components/ProjectCarousel";
@@ -65,17 +65,6 @@ const ACHIEVEMENTS = {
     description: "Hovered over my profile for suspiciously long time",
   },
 };
-
-const SPOTIFY_AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${
-  import.meta.env.VITE_SPOTIFY_CLIENT_ID
-}&response_type=code&redirect_uri=${encodeURIComponent(
-  import.meta.env.PROD
-    ? import.meta.env.VITE_SPOTIFY_REDIRECT_URI
-    : import.meta.env.VITE_SPOTIFY_REDIRECT_URI ||
-        window.location.origin + "/callback"
-)}&scope=${encodeURIComponent(
-  "user-read-currently-playing user-read-recently-played user-read-playback-state"
-)}`;
 
 // Add this before the MainContent function
 const PROJECTS = [
@@ -625,7 +614,7 @@ function MainContent() {
               software, clean interfaces, and tech that doesn't need a manual to
               use. Whether it's an AI model, an automation tool, or a side
               project I started at 2 AM, I believe in building things that
-              actually work—unlike EA servers.
+              actually work unlike EA servers.
             </p>
           </div>
         </section>

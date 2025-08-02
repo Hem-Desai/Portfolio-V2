@@ -22,6 +22,7 @@ import {
   SiNextdotjs,
   SiPandas,
   SiNumpy,
+  SiN8N,
 } from "react-icons/si";
 import {
   TbBrain,
@@ -29,10 +30,8 @@ import {
   TbWorldWww,
   TbBox,
   TbBoxMultiple,
-  TbTerminal,
   TbCode,
   TbTools,
-  TbSend,
   TbRobot,
   TbNetwork,
   TbAlignCenter,
@@ -326,6 +325,14 @@ const SKILLS: Skill[] = [
     icon: (
       <TbArrowsRandom className="w-5 h-5 text-rose-500 dark:text-rose-400" />
     ),
+  },
+  {
+    id: "n8n",
+    name: "n8n",
+    level: 4,
+    category: "tools",
+    connections: ["workflows"],
+    icon: <SiN8N className="w-5 h-5 text-rose-600 dark:text-rose-500" />,
   },
 ];
 
