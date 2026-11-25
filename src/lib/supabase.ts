@@ -31,30 +31,15 @@ export async function getReactions() {
   return data;
 }
 
-// Function to add or update a reaction
+// Add +1 to an emoji. Goes through a database function so visitors
+// can only increment counts, never edit or delete rows directly.
+// See supabase/kudos-policy.sql.
 export async function addReaction(emoji: string) {
-  const { data: existing } = await supabase
-    .from("reactions")
-    .select("*")
-    .eq("emoji", emoji)
-    .single();
+  const { error } = await supabase.rpc("increment_reaction", {
+    p_emoji: emoji,
+  });
 
-  if (existing) {
-    const { error } = await supabase
-      .from("reactions")
-      .update({ count: existing.count + 1 })
-      .eq("emoji", emoji);
-
-    if (error) {
-      console.error("Error updating reaction:", error);
-    }
-  } else {
-    const { error } = await supabase
-      .from("reactions")
-      .insert([{ emoji, count: 1 }]);
-
-    if (error) {
-      console.error("Error adding reaction:", error);
-    }
+  if (error) {
+    console.error("Error adding reaction:", error);
   }
 }

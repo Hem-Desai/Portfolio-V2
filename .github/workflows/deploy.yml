@@ -24,11 +24,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # Add your environment variables here
-          VITE_SPOTIFY_CLIENT_ID: ${{ secrets.VITE_SPOTIFY_CLIENT_ID }}
-          VITE_SPOTIFY_CLIENT_SECRET: ${{ secrets.VITE_SPOTIFY_CLIENT_SECRET }}
-          VITE_SPOTIFY_REDIRECT_URI: ${{ secrets.VITE_SPOTIFY_REDIRECT_URI }}
-          # Add any other environment variables your app needs
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

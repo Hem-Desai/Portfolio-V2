@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Volume2, VolumeX, CloudRain, Trees, Piano } from "lucide-react";
-import useSound from "use-sound";
+import type { Howl } from "howler";
 
 interface SoundOption {
   id: string;
@@ -37,7 +37,8 @@ const SOUND_OPTIONS: SoundOption[] = [
 export const AmbientPlayer: React.FC<AmbientPlayerProps> = ({
   onAllSoundsPlayed,
 }) => {
-  const [isMuted, setIsMuted] = useState(false);
+  // Nothing is downloaded or played until the visitor presses play.
+  const [isMuted, setIsMuted] = useState(true);
   const [volume, setVolume] = useState(0.15);
   const [previousVolume, setPreviousVolume] = useState(0.15);
   const [currentSound, setCurrentSound] = useState<SoundOption>(
@@ -45,32 +46,49 @@ export const AmbientPlayer: React.FC<AmbientPlayerProps> = ({
   );
   const [showControls, setShowControls] = useState(false);
   const [playedSounds, setPlayedSounds] = useState<Set<string>>(new Set());
+  const howlRef = useRef<Howl | null>(null);
+  const requestRef = useRef(0);
+  const volumeRef = useRef(volume);
+  volumeRef.current = volume;
 
-  const [play, { sound, stop }] = useSound(currentSound.url, {
-    volume: isMuted ? 0 : volume,
-    loop: true,
-    interrupt: true,
-  });
+  const stop = () => {
+    requestRef.current++;
+    howlRef.current?.unload();
+    howlRef.current = null;
+  };
+
+  // Create the Howl lazily. html5 mode streams the file instead of
+  // downloading the whole thing before it starts.
+  const play = async (option: SoundOption) => {
+    stop();
+    // The audio library itself is also only fetched on first play.
+    const request = ++requestRef.current;
+    const { Howl } = await import("howler");
+    if (request !== requestRef.current) return; // a newer action won
+    const howl = new Howl({
+      src: [option.url],
+      loop: true,
+      html5: true,
+      volume: volumeRef.current,
+    });
+    howl.play();
+    howlRef.current = howl;
+  };
+
+  // Release audio when the component unmounts
+  useEffect(() => stop, []);
 
   useEffect(() => {
-    if (!isMuted) {
-      play();
-    }
-    return () => stop();
-  }, [play, stop, currentSound, isMuted]);
-
-  // Add effect to update volume
-  useEffect(() => {
-    if (sound) {
-      sound.volume(isMuted ? 0 : volume);
-    }
-  }, [sound, volume, isMuted]);
+    howlRef.current?.volume(isMuted ? 0 : volume);
+  }, [volume, isMuted]);
 
   const toggleMute = () => {
     if (isMuted) {
-      setVolume(previousVolume);
+      const restored = previousVolume > 0 ? previousVolume : 0.15;
+      setVolume(restored);
+      volumeRef.current = restored;
       setIsMuted(false);
-      play();
+      play(currentSound);
     } else {
       setPreviousVolume(volume);
       setIsMuted(true);
@@ -79,10 +97,9 @@ export const AmbientPlayer: React.FC<AmbientPlayerProps> = ({
   };
 
   const changeSound = (sound: SoundOption) => {
-    stop();
     setCurrentSound(sound);
     if (!isMuted) {
-      play();
+      play(sound);
     }
 
     // Track played sounds and check for achievement
@@ -97,11 +114,12 @@ export const AmbientPlayer: React.FC<AmbientPlayerProps> = ({
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
+    volumeRef.current = newVolume;
     setPreviousVolume(newVolume);
 
     if (isMuted && newVolume > 0) {
       setIsMuted(false);
-      play();
+      play(currentSound);
     }
 
     if (!isMuted && newVolume === 0) {
@@ -162,8 +180,8 @@ export const AmbientPlayer: React.FC<AmbientPlayerProps> = ({
       </div>
       <button
         onClick={toggleMute}
-        className="p-2 rounded-full bg-white/80 dark:bg-white/10 backdrop-blur-sm 
-          hover:bg-zinc-200 dark:hover:bg-white/20 transition-all duration-300
+        className="p-2 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm shadow-lg
+          hover:bg-zinc-200 dark:hover:bg-zinc-700/90 transition-all duration-300
           border border-zinc-200 dark:border-zinc-700/20
           text-zinc-700 dark:text-white"
         aria-label={isMuted ? "Unmute ambient sound" : "Mute ambient sound"}

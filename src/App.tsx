@@ -5,7 +5,6 @@ import { AmbientPlayer } from "./components/AmbientPlayer";
 import { SkillTree } from "./components/SkillTree";
 import { KudosButton } from "./components/KudosButton";
 
-import { SpotifyAuth } from "./components/SpotifyAuth";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { ProjectCarousel } from "./components/ProjectCarousel";
 import { StarBackground } from "./components/StarBackground";
@@ -70,48 +69,48 @@ const PROJECTS = [
   {
     title: "My UCL XI",
     description:
-      "A matchday planner for Champions League Fantasy. Import your squad from a screenshot, compare fixture difficulty, and plan transfers and chips. Use projected points and AI-assisted player research to pick your starting XI.",
+      "Plan your Champions League Fantasy matchday in minutes. Import your squad from a screenshot, compare fixture difficulty, and use projected points and AI player research to pick your XI, transfers and chips.",
     link: "https://myuclxi.com/",
     technologies: ["Next.js", "TypeScript", "Supabase"],
   },
   {
     title: "MediWrite",
     description:
-      "Developed a medical automation system, streamlining emergency procedures for accident cases by automating documentation, patient registration, and data management using Python and Flask.",
+      "Cuts the paperwork in accident and emergency cases. MediWrite automates patient registration and case documentation so staff spend less time on forms and more time on care.",
     link: "https://github.com/Hem-Desai/MediWrite",
     technologies: ["React", "Flask", "Python"],
   },
   {
     title: "Local LLM based Assistant",
     description:
-      "Designed and developed a local LLM-based AI assistant, providing conversational AI capabilities without relying on external APIs, ensuring data privacy and faster response times.",
+      "A ChatGPT-style assistant that runs entirely on your own machine through Ollama. Your conversations never leave your device, there are no API costs, and it works offline.",
     link: "https://github.com/Hem-Desai/local-ollama-assistant",
     technologies: ["Python", "Ollama"],
   },
   {
     title: "Doctor Website",
     description:
-      "Developed a web application enabling doctors to connect with patients for consultations and follow-ups. Implemented secure messaging, appointment scheduling, and patient record management.",
+      "A live practice site for a real doctor. Patients can book appointments, message the doctor securely and keep their records in one place, which replaces phone calls and paper files.",
     link: "https://dr-anupama-desai.vercel.app/",
     technologies: ["React Native", "TailwindCSS", "TypeScript", "Supabase"],
   },
   {
     title: "StreamPlay Assistant",
     description:
-      "Developed StreamPlay Assistant, a cloud-based gaming bot enabling viewers to control gameplay via chat commands on Twitch, enhancing audience engagement and stream interactivity.",
+      "Lets Twitch viewers play the game for the streamer. Chat commands become live in-game inputs, so passive viewers turn into players.",
     link: "https://github.com/Hem-Desai/StreamPlay-Assistant",
     technologies: ["Python", "AutoHotKey"],
   },
   {
     title: "Sign Language Translator",
-    description: "App translating from English into US sign language.",
+    description: "Type English and see it in American Sign Language. A simple browser tool that makes everyday phrases easier to learn and share.",
     link: "https://github.com/Hem-Desai/Sign-Language-Translator",
     technologies: ["JavaScript", "React", "Context API", "Flexbox"],
   },
   {
     title: "Kanye Says",
     description:
-      "Your pocket-sized Kanye West quote generator that drops Ye's most outrageous wisdom bombs",
+      "Your pocket-sized Kanye West quote generator. One tap gets you a new piece of Ye's most outrageous wisdom, with smooth Framer Motion transitions.",
     link: "https://kanye-says-kohl.vercel.app/",
     technologies: ["Next.js", "TypeScript", "TailwindCSS", "Framer Motion"],
   },
@@ -289,8 +288,9 @@ function MainContent() {
       {/* Achievements Counter */}
       <button
         onClick={() => setShowAchievementsPanel(!showAchievementsPanel)}
-        className="fixed bottom-4 left-4 flex items-center gap-2 px-3 py-2 
-        bg-white/10 dark:bg-zinc-800/90 backdrop-blur-sm
+        aria-label="Show achievements"
+        className="fixed bottom-6 left-4 flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 text-sm sm:text-base
+        bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm
         rounded-lg shadow-lg border border-white/20 dark:border-zinc-700/50
         text-black dark:text-white hover:bg-white/20 dark:hover:bg-zinc-700/90
         transition-all duration-300 z-50"
@@ -307,7 +307,7 @@ function MainContent() {
       {/* Achievements List Panel */}
       {showAchievementsPanel && (
         <div
-          className="fixed bottom-16 left-4 w-72 bg-white/10 dark:bg-zinc-800/90 backdrop-blur-sm p-4 
+          className="fixed bottom-20 left-4 w-72 max-w-[calc(100vw-2rem)] bg-white/10 dark:bg-zinc-800/90 backdrop-blur-sm p-4 
           rounded-lg shadow-lg border border-white/20 dark:border-zinc-700/50
           transition-all duration-300 transform z-50"
         >
@@ -500,7 +500,7 @@ function MainContent() {
           </h2>
           <div className="space-y-6">
             <div className="block group">
-              <div className="flex items-baseline justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
                 <h3 className="text-lg font-normal text-black dark:text-white hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-300">
                   <a
                     href="https://redialbpo.com"
@@ -511,7 +511,7 @@ function MainContent() {
                     Redial BPO
                   </a>
                 </h3>
-                <span className="text-sm font-light text-black dark:text-white">
+                <span className="text-sm font-light text-black/70 dark:text-white/70 whitespace-nowrap">
                   Jul 2025 - Present
                 </span>
               </div>
@@ -528,7 +528,7 @@ function MainContent() {
             </div>
 
             <div className="block group">
-              <div className="flex items-baseline justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
                 <h3 className="text-lg font-normal text-black dark:text-white hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-300">
                   <a
                     href="https://aivoa.net"
@@ -539,7 +539,7 @@ function MainContent() {
                     AIVOA
                   </a>
                 </h3>
-                <span className="text-sm font-light text-black dark:text-white">
+                <span className="text-sm font-light text-black/70 dark:text-white/70 whitespace-nowrap">
                   Jan 2025 - July 2025
                 </span>
               </div>
@@ -565,11 +565,11 @@ function MainContent() {
             </div>
 
             <div className="block group">
-              <div className="flex items-baseline justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
                 <h3 className="text-lg font-normal text-black dark:text-white hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-300">
                   Synergy Technical Club
                 </h3>
-                <span className="text-sm font-light text-black dark:text-white">
+                <span className="text-sm font-light text-black/70 dark:text-white/70 whitespace-nowrap">
                   June 2022 - July 2024
                 </span>
               </div>
@@ -626,8 +626,8 @@ function MainContent() {
         </section>
       </main>
 
-      {/* Footer section with controls and Spotify */}
-      <footer className="pb-28 relative z-40">
+      {/* Footer section with controls */}
+      <footer className="pb-32 relative z-40">
         <ThemeToggle onThemeToggle={handleThemeToggle} />
         <KudosButton
           onFirstKudos={() => unlockAchievement(ACHIEVEMENTS.KUDOS_FIRST)}
@@ -635,34 +635,11 @@ function MainContent() {
         />
         <AmbientPlayer onAllSoundsPlayed={handleAmbientSoundComplete} />
 
-        {/* Spotify widget temporarily hidden
-        <div className="flex justify-center items-center w-full mt-10 mb-6">
-          {localStorage.getItem("spotifyRefreshToken") ? (
-            <div className="relative w-56 mx-auto">
-              <SpotifyWidget
-                onTrackClick={() =>
-                  unlockAchievement(ACHIEVEMENTS.SPOTIFY_CONNECT)
-                }
-              />
-            </div>
-          ) : (
-            <a
-              href={SPOTIFY_AUTH_URL}
-              className="flex items-center gap-2 px-3 py-1.5
-                bg-white/10 backdrop-blur-sm rounded-lg border border-zinc-200/20 dark:border-zinc-700/20 
-                text-black dark:text-white hover:bg-white/20 transition-all duration-300 text-sm"
-            >
-              <Music className="w-3.5 h-3.5" />
-              Connect Spotify
-            </a>
-          )}
-        </div>
-        */}
       </footer>
 
       {showImageViewer && (
         <ImageViewer
-          src="/images/profile.jpg"
+          src="/images/profile-large.jpg"
           alt="Hem Desai"
           onClose={() => setShowImageViewer(false)}
         />
@@ -676,7 +653,6 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<MainContent />} />
-        <Route path="/callback" element={<SpotifyAuth />} />
       </Routes>
     </Router>
   );

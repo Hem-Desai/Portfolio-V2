@@ -39,13 +39,8 @@ async function setupDatabase() {
           to public
           using (true);
 
-        -- Allow public insert/update
-        create policy "Allow public insert/update on reactions"
-          on public.reactions
-          for all
-          to public
-          using (true)
-          with check (true);
+        -- Writes go through the increment_reaction RPC only.
+        -- See supabase/kudos-policy.sql.
       `,
     });
 

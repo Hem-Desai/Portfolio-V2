@@ -97,7 +97,7 @@ export const KudosButton: React.FC<KudosButtonProps> = ({
         <div ref={pickerRef}>
           <button
             onClick={() => setShowPicker(!showPicker)}
-            className="p-2 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 
+            className="p-2 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm shadow-lg hover:bg-zinc-100 dark:hover:bg-zinc-700/90 
               border border-zinc-200/20 dark:border-zinc-700/20
               transition-all duration-300 hover:scale-110 relative"
             aria-label="Show emoji reactions"
@@ -114,7 +114,7 @@ export const KudosButton: React.FC<KudosButtonProps> = ({
 
         {/* Emoji Picker */}
         <div
-          className={`absolute right-full mr-5t top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-sm rounded-full p-2 flex gap-1
+          className={`absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-full p-2 flex gap-1
           border border-zinc-200/20 dark:border-zinc-700/20
           transition-all duration-300 origin-right
           ${
