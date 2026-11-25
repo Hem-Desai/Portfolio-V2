@@ -56,7 +56,7 @@ export const ProjectCarousel: React.FC<ProjectCarouselProps> = ({
   const visibleProjects = getVisibleProjects();
 
   return (
-    <div className="relative mx-16">
+    <div className="relative mx-12 sm:mx-16">
       <div className="overflow-hidden">
         <div
           className="flex gap-8 transition-all duration-500 ease-in-out"
@@ -72,7 +72,7 @@ export const ProjectCarousel: React.FC<ProjectCarouselProps> = ({
               href={project.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex-shrink-0 bg-white/80 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 
+              className="w-full flex-shrink-0 bg-white/80 dark:bg-white/5 backdrop-blur-sm rounded-xl p-4 sm:p-6
                 border border-zinc-200/50 dark:border-zinc-700/10 
                 hover:border-zinc-300 dark:hover:border-zinc-700/20 
                 transition-all duration-300 group overflow-hidden
@@ -85,7 +85,7 @@ export const ProjectCarousel: React.FC<ProjectCarouselProps> = ({
                   <ExternalLink className="w-4 h-4" />
                 </h3>
               </div>
-              <p className="text-black/80 dark:text-white/80 text-sm font-normal mb-4 line-clamp-4 flex-grow">
+              <p className="text-black/80 dark:text-white/80 text-sm font-normal mb-4 flex-grow">
                 {project.description}
               </p>
               <div className="flex flex-wrap gap-2 mt-auto">
@@ -106,7 +106,7 @@ export const ProjectCarousel: React.FC<ProjectCarouselProps> = ({
       <button
         onClick={previousSlide}
         disabled={isAnimating}
-        className="absolute -left-16 top-1/2 -translate-y-1/2 p-3 rounded-full 
+        className="absolute -left-12 sm:-left-16 top-1/2 -translate-y-1/2 p-2.5 sm:p-3 rounded-full
           bg-white/5 backdrop-blur-sm border border-zinc-200/10 dark:border-zinc-700/10 
           hover:bg-white/10 transition-all duration-300 text-black dark:text-white
           opacity-100 cursor-pointer
@@ -119,7 +119,7 @@ export const ProjectCarousel: React.FC<ProjectCarouselProps> = ({
       <button
         onClick={nextSlide}
         disabled={isAnimating}
-        className="absolute -right-16 top-1/2 -translate-y-1/2 p-3 rounded-full 
+        className="absolute -right-12 sm:-right-16 top-1/2 -translate-y-1/2 p-2.5 sm:p-3 rounded-full
           bg-white/5 backdrop-blur-sm border border-zinc-200/10 dark:border-zinc-700/10 
           hover:bg-white/10 transition-all duration-300 text-black dark:text-white
           opacity-100 cursor-pointer

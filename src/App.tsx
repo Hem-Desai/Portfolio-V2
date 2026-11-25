@@ -70,7 +70,7 @@ const PROJECTS = [
   {
     title: "My UCL XI",
     description:
-      "Plan your Champions League Fantasy XI with screenshot imports and projected points.",
+      "A matchday planner for Champions League Fantasy. Import your squad from a screenshot, compare fixture difficulty, and plan transfers and chips. Use projected points and AI-assisted player research to pick your starting XI.",
     link: "https://myuclxi.com/",
     technologies: ["Next.js", "TypeScript", "Supabase"],
   },
