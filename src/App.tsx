@@ -66,8 +66,14 @@ const ACHIEVEMENTS = {
   },
 };
 
-// Add this before the MainContent function
 const PROJECTS = [
+  {
+    title: "My UCL XI",
+    description:
+      "Plan your Champions League Fantasy XI with screenshot imports and projected points.",
+    link: "https://myuclxi.com/",
+    technologies: ["Next.js", "TypeScript", "Supabase"],
+  },
   {
     title: "MediWrite",
     description:
